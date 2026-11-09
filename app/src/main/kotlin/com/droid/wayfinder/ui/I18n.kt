@@ -60,7 +60,7 @@ fun com.droid.wayfinder.data.FileEntry.localizedTypeLabel(): String = when {
     isShare -> stringResource(com.droid.wayfinder.R.string.type_network_share)
     isDir -> stringResource(com.droid.wayfinder.R.string.kind_folder)
     extension.isNotEmpty() && kind == com.droid.wayfinder.data.FileKind.Other ->
-        stringResource(com.droid.wayfinder.R.string.type_ext_file, extension.uppercase())
+        icuStringResource(com.droid.wayfinder.R.string.type_ext_file, extension.uppercase())
     else -> stringResource(kind.labelRes)
 }
 
@@ -78,6 +78,8 @@ fun localizePhoneName(name: String): String = when (name) {
     "Phone" -> stringResource(com.droid.wayfinder.R.string.sidebar_phone)
     "Connected Phone" -> stringResource(com.droid.wayfinder.R.string.phone_connected_default)
     "USB Phone" -> stringResource(com.droid.wayfinder.R.string.phone_usb_default)
+    "Cross-Device Phone" -> stringResource(com.droid.wayfinder.R.string.phone_cross_device_title)
+    "Connect Phone Storage" -> stringResource(com.droid.wayfinder.R.string.phone_connect_storage_title)
     else -> name
 }
 
@@ -86,10 +88,11 @@ fun localizePhoneName(name: String): String = when (name) {
 fun localizeSubtitle(subtitle: String?): String? {
     if (subtitle == null) return null
     gbFreeRegex.matchEntire(subtitle)?.let { m ->
-        return stringResource(com.droid.wayfinder.R.string.sidebar_gb_free, m.groupValues[1])
+        return icuStringResource(com.droid.wayfinder.R.string.sidebar_gb_free, m.groupValues[1])
     }
     return when (subtitle) {
         "Internal storage", "Internal Storage" -> stringResource(com.droid.wayfinder.R.string.sidebar_internal_storage)
+        "Cross-Device Services" -> stringResource(com.droid.wayfinder.R.string.phone_cross_device_services)
         "USB file transfer" -> stringResource(com.droid.wayfinder.R.string.phone_subtitle_usb_transfer)
         "USB · Tap to connect storage" -> stringResource(com.droid.wayfinder.R.string.phone_subtitle_usb_tap_connect)
         "Tap to connect phone storage" -> stringResource(com.droid.wayfinder.R.string.phone_subtitle_bt_tap_connect)

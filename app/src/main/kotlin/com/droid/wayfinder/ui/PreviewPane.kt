@@ -91,7 +91,9 @@ fun PreviewPane(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
                     val e = sel[0]
                     Preview(null, e.name, stringResource(e.kind.labelRes), e, vm)
                     Fact(stringResource(R.string.col_type), e.localizedTypeLabel())
-                    e.subtitle?.takeIf { it.isNotBlank() }?.let { Fact(stringResource(R.string.preview_summary), localizeSubtitle(it)) }
+                    e.subtitle?.takeIf { it.isNotBlank() }?.let { sub ->
+                        localizeSubtitle(sub)?.let { Fact(stringResource(R.string.preview_summary), it) }
+                    }
                     if (!e.isDir) Fact(stringResource(R.string.col_size), formatSize(e.size))
                     Fact(stringResource(R.string.preview_modified), formatDateFull(e.modified))
                     Fact(stringResource(R.string.preview_location), s.localizedDisplayPath(FsPath.parent(e.path) ?: e.path, " / "))

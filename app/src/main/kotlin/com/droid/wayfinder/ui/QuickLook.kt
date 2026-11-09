@@ -210,7 +210,7 @@ private fun ZipPreview(e: FileEntry) {
         }
     }
     val r = listing ?: run { CircularProgressIndicator(); return }
-    val l = r.getOrNull() ?: run { BinaryPreview(e, stringResource(R.string.quicklook_archive_cannot_read, r.exceptionOrNull()?.message ?: "")); return }
+    val l = r.getOrNull() ?: run { BinaryPreview(e, icuStringResource(R.string.quicklook_archive_cannot_read, r.exceptionOrNull()?.message ?: "")); return }
     Column(Modifier.fillMaxSize()) {
         Text(
             stringResource(
@@ -257,7 +257,7 @@ private fun BinaryPreview(e: FileEntry, message: String = stringResource(R.strin
                 stringResource(R.string.quicklook_computing_checksums) + if (e.size > 0) " ${(done * 100 / e.size).coerceIn(0, 100)}%" else "",
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
             )
-            r.isFailure -> Text(stringResource(R.string.quicklook_cannot_read_file, r.exceptionOrNull()?.message ?: ""), style = MaterialTheme.typography.bodySmall, color = cs.error)
+            r.isFailure -> Text(icuStringResource(R.string.quicklook_cannot_read_file, r.exceptionOrNull()?.message ?: ""), style = MaterialTheme.typography.bodySmall, color = cs.error)
             else -> SelectionContainer {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("SHA-256  ${r.getOrThrow().sha256}", style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
@@ -371,7 +371,7 @@ private fun TextPreview(e: FileEntry) {
                     val s = String(buf, 0, n, Charsets.UTF_8)
                     if (e.size > TEXT_PREVIEW_BYTES) "$s\n\n$truncatedMsg" else s
                 }
-            }.getOrElse { ctx.getString(R.string.quicklook_cannot_read_file, it.message ?: "") }
+            }.getOrElse { ctx.icuString(R.string.quicklook_cannot_read_file, it.message ?: "") }
         }
     }
     val t = text

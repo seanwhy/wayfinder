@@ -435,8 +435,8 @@ private fun DragGhost(drag: DragController, s: AppState) {
             val text = when {
                 target == null -> what
                 target == FsPath.TRASH_ROOT -> androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.drag_move_to_trash, what)
-                drag.copyMode -> androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.drag_copy_to_target, what, s.localizedTitleOf(target))
-                else -> androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.drag_move_to_target, what, s.localizedTitleOf(target))
+                drag.copyMode -> icuStringResource(com.droid.wayfinder.R.string.drag_copy_to_target, s.localizedTitleOf(target))
+                else -> icuStringResource(com.droid.wayfinder.R.string.drag_move_to_target, s.localizedTitleOf(target))
             }
             Text(text, style = MaterialTheme.typography.labelLarge)
         }
@@ -464,7 +464,7 @@ private fun PickerBanner(vm: BrowserViewModel, s: AppState) {
                             style = MaterialTheme.typography.titleSmall,
                         )
                         val hint = listOfNotNull(
-                            req.description?.let { androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.picker_accepts_desc, it) },
+                            req.description?.let { icuStringResource(com.droid.wayfinder.R.string.picker_accepts_desc, it) },
                             if (req.allowMultiple) androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.picker_ctrl_click_hint) else null,
                             androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.picker_double_click_hint),
                         )
@@ -473,7 +473,7 @@ private fun PickerBanner(vm: BrowserViewModel, s: AppState) {
                     OutlinedButton({ vm.cancelPick() }) { Text(androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.action_cancel)) }
                     Button({ vm.pickSelection() }, enabled = pickable.isNotEmpty()) {
                         Text(
-                            if (pickable.size > 1) androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.picker_select_files_count, pickable.size)
+                            if (pickable.size > 1) icuStringResource(com.droid.wayfinder.R.string.picker_select_files_count, pickable.size)
                             else androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.picker_select_file),
                         )
                     }
@@ -483,7 +483,7 @@ private fun PickerBanner(vm: BrowserViewModel, s: AppState) {
                     val canGrant = remember(folderTarget) { vm.canPickFolder(folderTarget) }
                     Column(Modifier.weight(1f)) {
                         Text(androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.picker_grant_folder_title), style = MaterialTheme.typography.titleSmall)
-                        Text(androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.picker_grant_folder_desc, s.localizedTitleOf(folderTarget)), style = MaterialTheme.typography.bodySmall)
+                        Text(icuStringResource(com.droid.wayfinder.R.string.picker_grant_folder_desc, s.localizedTitleOf(folderTarget)), style = MaterialTheme.typography.bodySmall)
                     }
                     OutlinedButton({ vm.cancelPick() }) { Text(androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.action_cancel)) }
                     Button({ vm.pickCurrentFolder() }, enabled = canGrant) {
@@ -493,7 +493,7 @@ private fun PickerBanner(vm: BrowserViewModel, s: AppState) {
                 com.droid.wayfinder.data.PickerMode.CreateDocument -> {
                     val validName = remember(s.createFileName) { FsPath.nameError(s.createFileName.trim()) == null }
                     Column(Modifier.weight(1f)) {
-                        Text(androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.picker_save_file_in, s.localizedTitleOf(s.active.path)), style = MaterialTheme.typography.titleSmall)
+                        Text(icuStringResource(com.droid.wayfinder.R.string.picker_save_file_in, s.localizedTitleOf(s.active.path)), style = MaterialTheme.typography.titleSmall)
                         OutlinedTextField(
                             value = s.createFileName,
                             onValueChange = vm::setCreateFileName,
@@ -727,8 +727,42 @@ private fun openWithSystem(ctx: Context, path: String, chooser: Boolean = false)
         android.widget.Toast.makeText(ctx, ctx.getString(com.droid.wayfinder.R.string.toast_cannot_open_from_location, f.name), android.widget.Toast.LENGTH_SHORT).show()
         return
     }
-    val mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(f.extension.lowercase()) ?: "*/*"
-    val i = Intent(Intent.ACTION_VIEW).setDataAndType(uri, mime).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    val isApk = f.extension.equals("apk", ignoreCase = true)
+    val mime = if (isApk) "application/vnd.android.package-archive"
+        else MimeTypeMap.getSingleton().getMimeTypeFromExtension(f.extension.lowercase()) ?: "*/*"
+
+    if (isApk || mime == "application/vnd.android.package-archive") {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            if (!ctx.packageManager.canRequestPackageInstalls()) {
+                val settingsIntent = Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                    data = android.net.Uri.parse("package:${ctx.packageName}")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                try {
+                    ctx.startActivity(settingsIntent)
+                    android.widget.Toast.makeText(ctx, ctx.getString(com.droid.wayfinder.R.string.toast_allow_install_unknown_apps), android.widget.Toast.LENGTH_LONG).show()
+                } catch (_: Exception) {
+                }
+                return
+            }
+        }
+        val installIntent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "application/vnd.android.package-archive")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        val openWithLabel = ctx.getString(com.droid.wayfinder.R.string.chooser_open_with)
+        try {
+            ctx.startActivity(if (chooser) Intent.createChooser(installIntent, openWithLabel) else installIntent)
+            return
+        } catch (_: Exception) {
+            android.widget.Toast.makeText(ctx, ctx.getString(com.droid.wayfinder.R.string.toast_no_app_can_open, f.name), android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+    }
+
+    val i = Intent(Intent.ACTION_VIEW)
+        .setDataAndType(uri, mime)
+        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
     val openWithLabel = ctx.getString(com.droid.wayfinder.R.string.chooser_open_with)
     try {
         ctx.startActivity(if (chooser) Intent.createChooser(i, openWithLabel) else i)

@@ -175,7 +175,7 @@ private fun TabItem(
                 tab.id,
                 role = Role.Tab,
                 selected = selected,
-                onClickLabel = androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.titlebar_select_tab, tabTitle),
+                onClickLabel = icuStringResource(com.droid.wayfinder.R.string.titlebar_select_tab, tabTitle),
                 onClick = { _, _, _ -> vm.selectTab(tab.id) },
                 onMiddle = { vm.closeTab(tab.id) },
                 onSecondary = { onShowMenu(it, tabMenu(vm, tab.id)) },
@@ -205,7 +205,7 @@ private fun TabItem(
                     Modifier.size(28.dp).clip(CircleShape).mouseGestures(
                         "close${tab.id}",
                         role = Role.Button,
-                        onClickLabel = androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.titlebar_close_tab_named, tabTitle),
+                        onClickLabel = icuStringResource(com.droid.wayfinder.R.string.titlebar_close_tab_named, tabTitle),
                         onClick = { _, _, _ -> vm.closeTab(tab.id) },
                     ),
                     contentAlignment = Alignment.Center,

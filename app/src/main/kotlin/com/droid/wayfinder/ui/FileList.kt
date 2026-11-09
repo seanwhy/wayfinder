@@ -215,8 +215,9 @@ private fun PhoneQuickAccessBanner(
     quickAccessAvailable: Boolean,
 ) {
     val cs = MaterialTheme.colorScheme
-    val phoneName = phone?.name ?: "Phone"
-    val subtitle = phone?.subtitle ?: if (quickAccessAvailable) "Cross-Device Services" else "Internal Storage"
+    val phoneName = phone?.name?.let { localizePhoneName(it) } ?: stringResource(R.string.sidebar_phone)
+    val subtitleRaw = phone?.subtitle ?: if (quickAccessAvailable) "Cross-Device Services" else "Internal Storage"
+    val displaySubtitle = localizeSubtitle(subtitleRaw) ?: subtitleRaw
     Surface(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
         shape = RoundedCornerShape(12.dp),
@@ -231,8 +232,8 @@ private fun PhoneQuickAccessBanner(
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f, fill = false)) {
                 Icon(Icons.Outlined.Smartphone, null, Modifier.size(24.dp), tint = cs.primary)
                 Column(Modifier.padding(start = 12.dp, end = 12.dp)) {
-                    Text("$phoneName · $subtitle", style = MaterialTheme.typography.titleSmall, color = cs.onSurface)
-                    Text("Paired with laptop via Cross-Device Services / Phone Hub", style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+                    Text("$phoneName · $displaySubtitle", style = MaterialTheme.typography.titleSmall, color = cs.onSurface)
+                    Text(stringResource(R.string.phone_banner_paired_desc), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
                     Text(stringResource(R.string.phone_privilege_note), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
                 }
             }
@@ -240,21 +241,21 @@ private fun PhoneQuickAccessBanner(
                 if (quickAccessAvailable) {
                     Button(onClick = { vm.openCrossDevicePhoneInSystemFiles() }, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)) {
                         Icon(Icons.Outlined.Smartphone, null, Modifier.size(16.dp))
-                        Text("Browse in Files", Modifier.padding(start = 6.dp), style = MaterialTheme.typography.labelMedium)
+                        Text(stringResource(R.string.phone_action_browse_in_files), Modifier.padding(start = 6.dp), style = MaterialTheme.typography.labelMedium)
                     }
                     OutlinedButton(onClick = { vm.openQuickShareFolder() }, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)) {
                         Icon(Icons.Outlined.Folder, null, Modifier.size(16.dp))
-                        Text("Quick Share", Modifier.padding(start = 6.dp), style = MaterialTheme.typography.labelMedium)
+                        Text(stringResource(R.string.phone_quick_share), Modifier.padding(start = 6.dp), style = MaterialTheme.typography.labelMedium)
                     }
                 } else {
                     Button(onClick = { vm.openQuickShareFolder() }, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)) {
                         Icon(Icons.Outlined.Folder, null, Modifier.size(16.dp))
-                        Text("Quick Share", Modifier.padding(start = 6.dp), style = MaterialTheme.typography.labelMedium)
+                        Text(stringResource(R.string.phone_quick_share), Modifier.padding(start = 6.dp), style = MaterialTheme.typography.labelMedium)
                     }
                 }
                 OutlinedButton(onClick = { vm.openPhoneHubSettings() }, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)) {
                     Icon(Icons.Outlined.Settings, null, Modifier.size(16.dp))
-                    Text("Phone Hub", Modifier.padding(start = 6.dp), style = MaterialTheme.typography.labelMedium)
+                    Text(stringResource(R.string.phone_hub_label), Modifier.padding(start = 6.dp), style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
@@ -362,73 +363,80 @@ private fun EmptyView(vm: BrowserViewModel, s: AppState, tab: TabState) {
     ) {
         when {
             tab.query.isNotBlank() -> if (tab.searching) Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator() }
-            else CenterMessage(
-                Icons.Outlined.SearchOff, stringResource(R.string.empty_search_title),
-                "Nothing matches “${tab.query}” " + (if (tab.searchFilter.scope == SearchScope.Everywhere) "on this device" else "in this folder or its subfolders") +
-                    (if (tab.searchFilter.category.ordinal != 0 || tab.searchFilter.modified.ordinal != 0) " with the current filters." else "."),
-            )
-            tab.path == FsPath.RECENTS_ROOT -> CenterMessage(Icons.Outlined.History, stringResource(R.string.empty_recents_title), "Files changed in the last 30 days appear here.")
-            tab.path == FsPath.STARRED_ROOT -> CenterMessage(Icons.Outlined.StarOutline, stringResource(R.string.empty_starred_title), "Right-click a file or folder and choose “Add to Starred”.")
+            else {
+                val scopeText = if (tab.searchFilter.scope == SearchScope.Everywhere) stringResource(R.string.empty_search_scope_everywhere) else stringResource(R.string.empty_search_scope_folder)
+                val filterText = if (tab.searchFilter.category.ordinal != 0 || tab.searchFilter.modified.ordinal != 0) stringResource(R.string.empty_search_with_filters) else "。"
+                CenterMessage(
+                    Icons.Outlined.SearchOff, stringResource(R.string.empty_search_title),
+                    icuStringResource(R.string.empty_search_body, tab.query, scopeText, filterText),
+                )
+            }
+            tab.path == FsPath.RECENTS_ROOT -> CenterMessage(Icons.Outlined.History, stringResource(R.string.empty_recents_title), stringResource(R.string.empty_recents_body))
+            tab.path == FsPath.STARRED_ROOT -> CenterMessage(Icons.Outlined.StarOutline, stringResource(R.string.empty_starred_title), stringResource(R.string.empty_starred_body))
             tab.path == FsPath.PHONE_ROOT -> {
                 val isUsbMtp = s.pairedPhone?.transport == com.droid.wayfinder.data.PhoneTransport.USB_MTP
                 val note = stringResource(R.string.phone_privilege_note)
+                val phoneHeading = s.pairedPhone?.name?.let { localizePhoneName(it) }
+                    ?: if (s.quickAccessAvailable) stringResource(R.string.phone_cross_device_title)
+                    else stringResource(R.string.phone_connect_storage_title)
+                val pairedName = s.pairedPhone?.name?.let { localizePhoneName(it) } ?: phoneHeading
                 CenterMessage(
                     Icons.Outlined.Smartphone,
-                    s.pairedPhone?.name ?: if (s.quickAccessAvailable) "Cross-Device Phone" else "Connect Phone Storage",
+                    phoneHeading,
                     when {
                         s.pairedPhone != null && !s.pairedPhone.isMounted && isUsbMtp ->
-                            "Select ${s.pairedPhone.name} in the system folder picker once to browse all folders over USB File Transfer (MTP)."
+                            icuStringResource(R.string.phone_empty_usb_unmounted, pairedName)
                         s.quickAccessAvailable ->
-                            "Open your Cross-Device phone in a side-by-side Files window (and drag files straight into Wayfinder), import files wirelessly, or connect over USB File Transfer (MTP) to mount phone folders."
+                            stringResource(R.string.phone_empty_quick_access)
                         s.pairedPhone != null && !s.pairedPhone.isMounted ->
-                            "Import files wirelessly from ${s.pairedPhone.name} via Cross-Device Services, or connect over USB File Transfer (MTP) to mount full phone folders."
+                            icuStringResource(R.string.phone_empty_paired_unmounted, pairedName)
                         else ->
-                            "Import files wirelessly from a phone linked in Cross-Device Services (Phone Hub), or connect via USB File Transfer (MTP) to mount phone folders."
+                            stringResource(R.string.phone_empty_default)
                     } + "\n\n$note",
                 ) {
                     if (isUsbMtp) {
                         Button({ vm.requestMountPhoneStorage(s.pairedPhone) }) {
                             Icon(Icons.Outlined.Smartphone, null, Modifier.size(18.dp))
-                            Text("Mount USB phone folders…", Modifier.padding(start = 6.dp))
+                            Text(stringResource(R.string.phone_action_mount_usb_folders), Modifier.padding(start = 6.dp))
                         }
                         if (s.quickAccessAvailable) {
-                            OutlinedButton({ vm.openCrossDevicePhoneInSystemFiles() }) { Text("Browse phone in Files window") }
+                            OutlinedButton({ vm.openCrossDevicePhoneInSystemFiles() }) { Text(stringResource(R.string.phone_action_browse_files_window)) }
                         }
-                        OutlinedButton({ vm.requestImportFromPhone() }) { Text("Import files…") }
+                        OutlinedButton({ vm.requestImportFromPhone() }) { Text(stringResource(R.string.phone_action_import_files)) }
                     } else if (s.quickAccessAvailable) {
                         Button({ vm.openCrossDevicePhoneInSystemFiles() }) {
                             Icon(Icons.Outlined.Smartphone, null, Modifier.size(18.dp))
-                            Text("Browse phone in Files window", Modifier.padding(start = 6.dp))
+                            Text(stringResource(R.string.phone_action_browse_files_window), Modifier.padding(start = 6.dp))
                         }
-                        OutlinedButton({ vm.requestImportFromPhone() }) { Text("Import files from phone…") }
-                        OutlinedButton({ vm.requestMountPhoneStorage(s.pairedPhone) }) { Text("Mount USB phone (MTP)…") }
+                        OutlinedButton({ vm.requestImportFromPhone() }) { Text(stringResource(R.string.phone_action_import_from_phone)) }
+                        OutlinedButton({ vm.requestMountPhoneStorage(s.pairedPhone) }) { Text(stringResource(R.string.phone_action_mount_usb_mtp)) }
                     } else {
                         Button({ vm.requestImportFromPhone() }) {
                             Icon(Icons.Outlined.Smartphone, null, Modifier.size(18.dp))
-                            Text("Import files from phone…", Modifier.padding(start = 6.dp))
+                            Text(stringResource(R.string.phone_action_import_from_phone), Modifier.padding(start = 6.dp))
                         }
-                        OutlinedButton({ vm.requestMountPhoneStorage(s.pairedPhone) }) { Text("Mount USB phone (MTP)…") }
+                        OutlinedButton({ vm.requestMountPhoneStorage(s.pairedPhone) }) { Text(stringResource(R.string.phone_action_mount_usb_mtp)) }
                     }
                     if (!s.bluetoothPermissionGranted) {
-                        OutlinedButton({ vm.requestBluetoothPermission() }) { Text("Allow Bluetooth detection") }
+                        OutlinedButton({ vm.requestBluetoothPermission() }) { Text(stringResource(R.string.phone_action_allow_bluetooth)) }
                     }
-                    OutlinedButton({ vm.openPhoneHubSettings() }) { Text("Phone Hub settings") }
-                    OutlinedButton({ vm.openQuickShareFolder() }) { Text("Quick Share folder") }
+                    OutlinedButton({ vm.openPhoneHubSettings() }) { Text(stringResource(R.string.action_phone_hub_settings)) }
+                    OutlinedButton({ vm.openQuickShareFolder() }) { Text(stringResource(R.string.phone_action_quick_share_folder)) }
                 }
             }
-            FsPath.tagOf(tab.path) != null -> CenterMessage(Icons.AutoMirrored.Outlined.Label, "Nothing tagged “${FsPath.name(tab.path)}”", "Right-click items and choose Color tags to label them.")
-            FsPath.isZip(tab.path) -> CenterMessage(Icons.Outlined.FolderOpen, "This folder in the archive is empty", null)
+            FsPath.tagOf(tab.path) != null -> CenterMessage(Icons.AutoMirrored.Outlined.Label, icuStringResource(R.string.empty_tagged_title, FsPath.name(tab.path)), stringResource(R.string.empty_tagged_body))
+            FsPath.isZip(tab.path) -> CenterMessage(Icons.Outlined.FolderOpen, stringResource(R.string.empty_archive_title), null)
             tab.path == FsPath.SMB_ROOT -> CenterMessage(
-                Icons.Outlined.WifiFind, if (s.scanning) "Looking for servers…" else "No servers found",
-                "Connect to a server by address, e.g. smb://nas/media, davs://cloud/dav or ftp://host",
-            ) { Button({ vm.showConnectDialog() }) { Text("Connect to server") }; OutlinedButton({ vm.refresh() }) { Text("Rescan") } }
-            tab.path == FsPath.TRASH_ROOT -> CenterMessage(Icons.Outlined.FolderOpen, stringResource(R.string.empty_trash_title), "Deleted files appear here until you empty the Trash.")
+                Icons.Outlined.WifiFind, if (s.scanning) stringResource(R.string.empty_servers_scanning) else stringResource(R.string.empty_servers_none),
+                stringResource(R.string.empty_servers_hint),
+            ) { Button({ vm.showConnectDialog() }) { Text(stringResource(R.string.empty_servers_connect)) }; OutlinedButton({ vm.refresh() }) { Text(stringResource(R.string.empty_servers_rescan)) } }
+            tab.path == FsPath.TRASH_ROOT -> CenterMessage(Icons.Outlined.FolderOpen, stringResource(R.string.empty_trash_title), stringResource(R.string.empty_trash_body))
             !s.showHidden && tab.entries.any { it.isHidden } -> CenterMessage(
                 Icons.Outlined.FolderOpen,
                 stringResource(R.string.empty_only_hidden_title),
                 icuStringResource(R.string.empty_only_hidden_body_plural, tab.entries.count { it.isHidden }),
             ) { Button({ vm.toggleHidden() }) { Text(stringResource(R.string.action_show_hidden_files)) } }
-            else -> CenterMessage(Icons.Outlined.FolderOpen, stringResource(R.string.empty_folder_title), "Right-click or press Ctrl+Shift+N to create a new folder.")
+            else -> CenterMessage(Icons.Outlined.FolderOpen, stringResource(R.string.empty_folder_title), stringResource(R.string.empty_folder_body))
         }
     }
 }

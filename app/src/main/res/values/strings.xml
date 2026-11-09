@@ -364,10 +364,10 @@
     <string name="drag_move_to_target" description="Drag ghost label when dragging items to move to target folder. [CHAR_LIMIT=40]">Move to {0}</string>
     <string name="drag_move_to_trash" description="Drag ghost label when dragging items over Trash bin. [CHAR_LIMIT=30]">Move to Trash</string>
     <string name="error_cannot_open_folder" description="Error title when folder navigation fails. [CHAR_LIMIT=30]">Cannot open folder</string>
-    <string name="error_name_control_chars" description="Validation error when file name contains ASCII/Unicode control characters. [CHAR_LIMIT=50]">Names can't contain control characters</string>
-    <string name="error_name_empty" description="Validation error when file or folder name is blank. [CHAR_LIMIT=30]">Name can't be empty</string>
+    <string name="error_name_control_chars" description="Validation error when file name contains ASCII/Unicode control characters. [CHAR_LIMIT=50]">Names can\'t contain control characters</string>
+    <string name="error_name_empty" description="Validation error when file or folder name is blank. [CHAR_LIMIT=30]">Name can\'t be empty</string>
     <string name="error_name_invalid" description="Validation error when file or folder name is invalid. [CHAR_LIMIT=30]">Invalid name</string>
-    <string name="error_name_slashes" description="Validation error when file name contains slash characters. [CHAR_LIMIT=40]">Names can't contain slashes</string>
+    <string name="error_name_slashes" description="Validation error when file name contains slash characters. [CHAR_LIMIT=40]">Names can\'t contain slashes</string>
     <string name="error_name_too_long" description="Validation error when file name exceeds maximum allowed length. [CHAR_LIMIT=30]">Name is too long</string>
     <string name="error_sign_in_failed" description="Error message when cloud or server authentication fails. [CHAR_LIMIT=30]">Sign in failed</string>
     <string name="error_sign_in_required" description="Prompt message when accessing a protected cloud account or server. [CHAR_LIMIT=30]">Sign in required</string>
@@ -652,4 +652,40 @@
     <string name="type_ext_file" description="File type description format using uppercase file extension. [CHAR_LIMIT=25]">{0} file</string>
     <string name="type_network_share" description="Item type description for network shares. [CHAR_LIMIT=25]">Network share</string>
     <string name="type_server" description="Item type description for network host servers. [CHAR_LIMIT=20]">Server</string>
+
+    <string name="phone_cross_device_services" description="Phone subtitle for cross device services. [CHAR_LIMIT=30]">Cross-Device Services</string>
+    <string name="phone_banner_paired_desc" description="Phone banner pairing description. [CHAR_LIMIT=70]">Paired with laptop via Cross-Device Services / Phone Hub</string>
+    <string name="phone_action_browse_in_files" description="Action button in phone banner to open files app. [CHAR_LIMIT=25]">Browse in Files</string>
+    <string name="phone_action_browse_files_window" description="Action button to browse phone in Files window. [CHAR_LIMIT=35]">Browse phone in Files window</string>
+    <string name="phone_action_mount_usb_folders" description="Action button to mount USB phone folders. [CHAR_LIMIT=35]">Mount USB phone folders…</string>
+    <string name="phone_action_mount_usb_mtp" description="Action button to mount USB phone via MTP. [CHAR_LIMIT=30]">Mount USB phone (MTP)…</string>
+    <string name="phone_action_import_files" description="Action button to import files. [CHAR_LIMIT=25]">Import files…</string>
+    <string name="phone_action_import_from_phone" description="Action button to import files from phone. [CHAR_LIMIT=30]">Import files from phone…</string>
+    <string name="phone_action_allow_bluetooth" description="Action button to allow bluetooth detection. [CHAR_LIMIT=35]">Allow Bluetooth detection</string>
+    <string name="phone_action_quick_share_folder" description="Action button to open Quick Share folder. [CHAR_LIMIT=30]">Quick Share folder</string>
+    <string name="phone_cross_device_title" description="Title for Cross-Device Phone. [CHAR_LIMIT=30]">Cross-Device Phone</string>
+    <string name="phone_connect_storage_title" description="Title for Connect Phone Storage. [CHAR_LIMIT=30]">Connect Phone Storage</string>
+    <string name="phone_empty_usb_unmounted" description="Description when phone USB is unmounted. [CHAR_LIMIT=120]">Select {0} in the system folder picker once to browse all folders over USB File Transfer (MTP).</string>
+    <string name="phone_empty_quick_access" description="Description for Cross-Device Phone empty state. [CHAR_LIMIT=180]">Open your Cross-Device phone in a side-by-side Files window (and drag files straight into Wayfinder), import files wirelessly, or connect over USB File Transfer (MTP) to mount phone folders.</string>
+    <string name="phone_empty_paired_unmounted" description="Description when paired phone is unmounted. [CHAR_LIMIT=140]">Import files wirelessly from {0} via Cross-Device Services, or connect over USB File Transfer (MTP) to mount full phone folders.</string>
+    <string name="phone_empty_default" description="Default description for phone empty state. [CHAR_LIMIT=140]">Import files wirelessly from a phone linked in Cross-Device Services (Phone Hub), or connect via USB File Transfer (MTP) to mount phone folders.</string>
+    <string name="phone_hub_label" description="Phone Hub button label. [CHAR_LIMIT=20]">Phone Hub</string>
+
+    <string name="empty_search_body" description="Search empty message body. [CHAR_LIMIT=100]">Nothing matches “{0}” {1}{2}</string>
+    <string name="empty_search_scope_everywhere" description="Search everywhere scope label. [CHAR_LIMIT=25]">on this device</string>
+    <string name="empty_search_scope_folder" description="Search current folder scope label. [CHAR_LIMIT=40]">in this folder or its subfolders</string>
+    <string name="empty_search_with_filters" description="Search with filters suffix. [CHAR_LIMIT=35]"> with the current filters.</string>
+    <string name="empty_recents_body" description="Recents empty body. [CHAR_LIMIT=60]">Files changed in the last 30 days appear here.</string>
+    <string name="empty_starred_body" description="Starred empty body. [CHAR_LIMIT=70]">Right-click a file or folder and choose “Add to Starred”.</string>
+    <string name="empty_tagged_title" description="Empty tagged folder title. [CHAR_LIMIT=40]">Nothing tagged “{0}”</string>
+    <string name="empty_tagged_body" description="Empty tagged folder body. [CHAR_LIMIT=70]">Right-click items and choose Color tags to label them.</string>
+    <string name="empty_archive_title" description="Empty zip folder title. [CHAR_LIMIT=45]">This folder in the archive is empty</string>
+    <string name="empty_servers_scanning" description="Looking for servers status. [CHAR_LIMIT=30]">Looking for servers…</string>
+    <string name="empty_servers_none" description="No servers found status. [CHAR_LIMIT=25]">No servers found</string>
+    <string name="empty_servers_hint" description="Server connection hint. [CHAR_LIMIT=100]">Connect to a server by address, e.g. smb://nas/media, davs://cloud/dav or ftp://host</string>
+    <string name="empty_servers_connect" description="Connect to server button. [CHAR_LIMIT=25]">Connect to server</string>
+    <string name="empty_servers_rescan" description="Rescan button. [CHAR_LIMIT=20]">Rescan</string>
+    <string name="empty_trash_body" description="Trash empty body. [CHAR_LIMIT=70]">Deleted files appear here until you empty the Trash.</string>
+    <string name="empty_folder_body" description="Folder empty body. [CHAR_LIMIT=70]">Right-click or press Ctrl+Shift+N to create a new folder.</string>
+    <string name="toast_allow_install_unknown_apps" description="Prompt to allow unknown app installations. [CHAR_LIMIT=70]">Please allow Wayfinder to install unknown apps</string>
 </resources>

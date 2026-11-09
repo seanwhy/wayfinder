@@ -340,7 +340,7 @@ private fun SearchFilterRow(vm: BrowserViewModel, tab: TabState) {
         }
         val n = tab.searchResults?.size
         if (n != null) Text(
-            if (tab.searching) stringResource(R.string.search_found_so_far, formatLocalizedNumber(n.toLong())) else icuStringResource(R.string.search_result_count_plural, n),
+            if (tab.searching) icuStringResource(R.string.search_found_so_far, formatLocalizedNumber(n.toLong())) else icuStringResource(R.string.search_result_count_plural, n),
             style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
         )
     }
@@ -519,14 +519,14 @@ private fun OverflowMenu(vm: BrowserViewModel, s: AppState, showViewItems: Boole
             }
             HorizontalDivider()
             DropdownMenuItem(
-                { Text(stringResource(R.string.overflow_theme_format, stringResource(s.theme.labelRes))) },
+                { Text(icuStringResource(R.string.overflow_theme_format, stringResource(s.theme.labelRes))) },
                 { vm.cycleTheme() },
                 leadingIcon = { Box(Modifier.size(18.dp)) },
                 trailingIcon = { Hint(stringResource(R.string.overflow_theme_hint)) },
             )
             DropdownMenuItem({ Text(stringResource(R.string.overflow_zoom_in)) }, { vm.zoomBy(1) }, leadingIcon = { Box(Modifier.size(18.dp)) }, trailingIcon = { Hint("Ctrl+=") })
             DropdownMenuItem({ Text(stringResource(R.string.overflow_zoom_out)) }, { vm.zoomBy(-1) }, leadingIcon = { Box(Modifier.size(18.dp)) }, trailingIcon = { Hint("Ctrl+-") })
-            DropdownMenuItem({ Text(stringResource(R.string.overflow_reset_zoom, (s.zoom * 100).toInt())) }, { open = false; vm.zoomBy(0) }, leadingIcon = { Box(Modifier.size(18.dp)) }, trailingIcon = { Hint("Ctrl+0") })
+            DropdownMenuItem({ Text(icuStringResource(R.string.overflow_reset_zoom, (s.zoom * 100).toInt())) }, { open = false; vm.zoomBy(0) }, leadingIcon = { Box(Modifier.size(18.dp)) }, trailingIcon = { Hint("Ctrl+0") })
             HorizontalDivider()
             DropdownMenuItem({ Text(stringResource(R.string.action_new_window)) }, { open = false; vm.newWindow() }, trailingIcon = { Hint("Ctrl+N") })
             DropdownMenuItem({ Text(stringResource(R.string.overflow_command_palette)) }, { open = false; vm.openPalette() }, trailingIcon = { Hint("Ctrl+K") })

@@ -725,7 +725,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
     private fun emit(e: UiEvent) { _events.tryEmit(e) }
     private fun toast(msg: String, undo: Boolean = false) = emit(UiEvent.Toast(msg, undo))
     internal fun str(@androidx.annotation.StringRes id: Int, vararg args: Any): String =
-        if (args.isEmpty()) app.getString(id) else app.getString(id, *args)
+        if (args.isEmpty()) app.getString(id) else runCatching { app.icuString(id, *args) }.getOrElse { app.getString(id, *args) }
     internal fun icuStr(@androidx.annotation.StringRes id: Int, vararg args: Any): String = app.icuString(id, *args)
 
     private fun persist() {
@@ -1127,10 +1127,6 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
             entry.isDir -> navigate(entry.path)
             isBrowsableArchive(entry) && newTab -> newTab(FsPath.zipRoot(entry.path), activate = false)
             isBrowsableArchive(entry) -> navigate(FsPath.zipRoot(entry.path))
-            // APKs found via Recents / Starred / tags / search open their containing folder, with the APK selected.
-            com.droid.wayfinder.MainActivity.isApkName(entry.name) &&
-                (FsPath.isVirtual(tab.path) || tab.searchResults != null || FsPath.parent(entry.path) != tab.path) ->
-                showInEnclosingFolder(entry.path)
             else -> openFile(entry.path)
         }
     }

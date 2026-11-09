@@ -644,4 +644,40 @@
     <string name="type_ext_file">{0} 文件</string>
     <string name="type_network_share">网络共享</string>
     <string name="type_server">服务器</string>
+
+    <string name="phone_cross_device_services">跨设备服务</string>
+    <string name="phone_banner_paired_desc">通过跨设备服务 / Phone Hub 与笔记本电脑配对</string>
+    <string name="phone_action_browse_in_files">在“文件”中浏览</string>
+    <string name="phone_action_browse_files_window">在“文件”窗口中浏览手机</string>
+    <string name="phone_action_mount_usb_folders">挂载 USB 手机文件夹…</string>
+    <string name="phone_action_mount_usb_mtp">挂载 USB 手机 (MTP)…</string>
+    <string name="phone_action_import_files">导入文件…</string>
+    <string name="phone_action_import_from_phone">从手机导入文件…</string>
+    <string name="phone_action_allow_bluetooth">允许蓝牙检测</string>
+    <string name="phone_action_quick_share_folder">互传文件夹</string>
+    <string name="phone_cross_device_title">跨设备手机</string>
+    <string name="phone_connect_storage_title">连接手机存储</string>
+    <string name="phone_empty_usb_unmounted">在系统文件夹选择器中选择一次 {0}，即可通过 USB 文件传输 (MTP) 浏览所有文件夹。</string>
+    <string name="phone_empty_quick_access">在并排的“文件”窗口中打开您的跨设备手机（并可将文件直接拖入 Wayfinder），通过无线方式导入文件，或通过 USB 文件传输 (MTP) 连接以挂载手机文件夹。</string>
+    <string name="phone_empty_paired_unmounted">通过跨设备服务从 {0} 无线导入文件，或通过 USB 文件传输 (MTP) 连接以挂载完整手机文件夹。</string>
+    <string name="phone_empty_default">通过跨设备服务 (Phone Hub) 链接的手机无线导入文件，或通过 USB 文件传输 (MTP) 连接以挂载手机文件夹。</string>
+    <string name="phone_hub_label">Phone Hub</string>
+
+    <string name="empty_search_body">没有与“{0}”匹配的项目{1}{2}</string>
+    <string name="empty_search_scope_everywhere">在此设备上</string>
+    <string name="empty_search_scope_folder">在此文件夹或其子文件夹中</string>
+    <string name="empty_search_with_filters">（使用当前筛选条件）。</string>
+    <string name="empty_recents_body">最近 30 天内更改的文件将显示在此处。</string>
+    <string name="empty_starred_body">右键点击文件或文件夹并选择“添加至已加星标”。</string>
+    <string name="empty_tagged_title">没有带有“{0}”标签的项目</string>
+    <string name="empty_tagged_body">右键点击项目并选择颜色标签来进行标记。</string>
+    <string name="empty_archive_title">压缩包中的此文件夹为空</string>
+    <string name="empty_servers_scanning">正在查找服务器…</string>
+    <string name="empty_servers_none">未找到服务器</string>
+    <string name="empty_servers_hint">通过地址连接到服务器，例如 smb://nas/media、davs://cloud/dav 或 ftp://host</string>
+    <string name="empty_servers_connect">连接到服务器</string>
+    <string name="empty_servers_rescan">重新扫描</string>
+    <string name="empty_trash_body">删除的文件将显示在此处，直到您清空回收站。</string>
+    <string name="empty_folder_body">右键点击或按 Ctrl+Shift+N 创建新文件夹。</string>
+    <string name="toast_allow_install_unknown_apps">请允许 Wayfinder 安装未知应用以安装此程序</string>
 </resources>
