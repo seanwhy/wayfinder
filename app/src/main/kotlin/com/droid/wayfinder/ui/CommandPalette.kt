@@ -178,14 +178,19 @@ fun paletteCommands(vm: BrowserViewModel, s: AppState): List<PaletteItem> {
         add(c(vm.str(R.string.palette_network), vm.str(R.string.palette_network_desc), null, Icons.Outlined.Dns) { vm.navigate(FsPath.SMB_ROOT) })
         add(c(vm.str(R.string.nav_trash), vm.str(R.string.palette_trash_desc), null, Icons.Outlined.Delete) { vm.navigate(FsPath.TRASH_ROOT) })
         add(c(vm.str(R.string.action_empty_trash), vm.str(R.string.palette_empty_trash_desc), null, Icons.Outlined.DeleteForever) { vm.emptyTrash() })
-        listOf(SortKey.Name to "name", SortKey.Modified to "date modified", SortKey.Type to "type", SortKey.Size to "size").forEach { (k, l) ->
-            add(c("Sort by $l", "Order items by $l", null, Icons.Outlined.SortByAlpha) { vm.setSort(k, if (tab.sortKey == k) tab.sortAsc else true) })
+        listOf(
+            Triple(SortKey.Name, R.string.palette_sort_by_name, R.string.palette_sort_by_name_desc),
+            Triple(SortKey.Modified, R.string.palette_sort_by_modified, R.string.palette_sort_by_modified_desc),
+            Triple(SortKey.Type, R.string.palette_sort_by_type, R.string.palette_sort_by_type_desc),
+            Triple(SortKey.Size, R.string.palette_sort_by_size, R.string.palette_sort_by_size_desc),
+        ).forEach { (k, titleRes, descRes) ->
+            add(c(vm.str(titleRes), vm.str(descRes), null, Icons.Outlined.SortByAlpha) { vm.setSort(k, if (tab.sortKey == k) tab.sortAsc else true) })
         }
         add(c(vm.str(R.string.action_open_in_new_window), vm.str(R.string.palette_new_window_desc), "Ctrl+N", Icons.Outlined.Web) { vm.newWindow() })
         add(c(vm.str(R.string.palette_zoom_in), vm.str(R.string.palette_zoom_in_desc), "Ctrl+=", Icons.Outlined.ZoomIn) { vm.zoomBy(1) })
         add(c(vm.str(R.string.palette_zoom_out), vm.str(R.string.palette_zoom_out_desc), "Ctrl+-", Icons.Outlined.ZoomOut) { vm.zoomBy(-1) })
         add(c(vm.str(R.string.palette_reset_zoom), vm.str(R.string.palette_reset_zoom_desc, (s.zoom * 100).toInt()), "Ctrl+0", Icons.Outlined.ZoomIn) { vm.zoomBy(0) })
-        add(c(vm.str(R.string.palette_cycle_theme), vm.str(R.string.palette_cycle_theme_desc, s.theme.label), null, Icons.Outlined.Contrast) { vm.cycleTheme() })
+        add(c(vm.str(R.string.palette_cycle_theme), vm.str(R.string.palette_cycle_theme_desc, vm.str(s.theme.labelRes)), null, Icons.Outlined.Contrast) { vm.cycleTheme() })
         add(c(vm.str(R.string.palette_locate_folder), vm.str(R.string.palette_locate_folder_desc), "Alt+Shift+L", Icons.Outlined.MyLocation) { vm.locateInTree() })
         add(c(vm.str(R.string.palette_collapse_tree), vm.str(R.string.palette_collapse_tree_desc), null, Icons.Outlined.UnfoldLess) { vm.collapseTree() })
         add(c(vm.str(R.string.nav_recents), vm.str(R.string.palette_recents_desc), null, Icons.Outlined.History) { vm.navigate(FsPath.RECENTS_ROOT) })
@@ -204,8 +209,9 @@ fun paletteCommands(vm: BrowserViewModel, s: AppState): List<PaletteItem> {
         }
         add(c(vm.str(R.string.palette_toggle_star), vm.str(R.string.palette_toggle_star_desc), null, Icons.Outlined.StarOutline) { vm.toggleStar() })
         ColorTag.entries.forEach { t ->
-            add(c("Tag: ${t.label}", "Toggle the ${t.label} color tag on the selection", null, Icons.AutoMirrored.Outlined.Label) { vm.toggleTag(t) })
-            add(c("Show ${t.label} items", "Open the ${t.label} color tag view", null, Icons.Filled.Circle) { vm.navigate(FsPath.tagPath(t)) })
+            val tagName = vm.str(t.labelRes)
+            add(c(vm.str(R.string.palette_tag_toggle, tagName), vm.str(R.string.palette_tag_toggle_desc, tagName), null, Icons.AutoMirrored.Outlined.Label) { vm.toggleTag(t) })
+            add(c(vm.str(R.string.palette_tag_show, tagName), vm.str(R.string.palette_tag_show_desc, tagName), null, Icons.Filled.Circle) { vm.navigate(FsPath.tagPath(t)) })
         }
         add(c(if (s.tagsColumn) vm.str(R.string.palette_hide_tags_column) else vm.str(R.string.palette_show_tags_column), vm.str(R.string.palette_details_column_desc), null, Icons.AutoMirrored.Outlined.Label) { vm.toggleTagsColumn() })
         add(c(if (s.permsColumn) vm.str(R.string.palette_hide_perms_column) else vm.str(R.string.palette_show_perms_column), vm.str(R.string.palette_details_column_desc), null, Icons.Outlined.Lock) { vm.togglePermsColumn() })
@@ -218,11 +224,11 @@ fun paletteCommands(vm: BrowserViewModel, s: AppState): List<PaletteItem> {
             add(c(vm.str(R.string.action_extract_archive_here), vm.str(R.string.palette_extract_many_desc), null, Icons.Outlined.Unarchive) { vm.extractSelection() })
         }
         if (one != null && (tab.searchResults != null || FsPath.isCollection(tab.path))) {
-            add(c("Show in enclosing folder", "Go to the folder that contains ${one.name}", null, Icons.Outlined.FindInPage) { vm.showInEnclosingFolder(one.path) })
+            add(c(vm.str(R.string.action_show_in_enclosing_folder), vm.str(R.string.palette_show_in_enclosing_desc, one.name), null, Icons.Outlined.FindInPage) { vm.showInEnclosingFolder(one.path) })
         }
-        add(c("Default file handler…", "Set or reset Wayfinder as default for folders, archives, and file picking", null, Icons.Outlined.AppRegistration) { vm.showDefaultHandlerDialog() })
-        add(c("Keyboard shortcuts", "Show all shortcuts", "F1", Icons.Outlined.Keyboard) { vm.showDialog(Dialog.Shortcuts) })
-        add(c("About Wayfinder", "Version and open-source licenses", null, Icons.Outlined.Info) { vm.showDialog(Dialog.About) })
+        add(c(vm.str(R.string.overflow_default_handler), vm.str(R.string.palette_default_handler_desc), null, Icons.Outlined.AppRegistration) { vm.showDefaultHandlerDialog() })
+        add(c(vm.str(R.string.overflow_keyboard_shortcuts), vm.str(R.string.palette_shortcuts_desc), "F1", Icons.Outlined.Keyboard) { vm.showDialog(Dialog.Shortcuts) })
+        add(c(vm.str(R.string.overflow_about), vm.str(R.string.palette_about_desc), null, Icons.Outlined.Info) { vm.showDialog(Dialog.About) })
     }
 }
 
@@ -230,9 +236,24 @@ fun paletteCommands(vm: BrowserViewModel, s: AppState): List<PaletteItem> {
 fun paletteFolders(vm: BrowserViewModel, s: AppState): List<PaletteItem> {
     val seen = HashSet<String>()
     val out = ArrayList<PaletteItem>()
+    fun localizedTitle(path: String): String = when (path) {
+        FsPath.SMB_ROOT -> vm.str(R.string.nav_network)
+        FsPath.TRASH_ROOT -> vm.str(R.string.nav_trash)
+        FsPath.RECENTS_ROOT -> vm.str(R.string.nav_recents)
+        FsPath.STARRED_ROOT -> vm.str(R.string.nav_starred)
+        FsPath.PHONE_ROOT -> s.pairedPhone?.name?.let { if (it == "Phone") vm.str(R.string.phone_default_name) else it } ?: vm.str(R.string.phone_default_name)
+        else -> FsPath.tagOf(path)?.let { vm.str(it.labelRes) }
+            ?: s.roots.firstOrNull { it.path == path }?.let { r ->
+                when (r.label) {
+                    "Internal storage" -> vm.str(R.string.root_internal_storage)
+                    "Linux files" -> vm.str(R.string.linux_files_title)
+                    else -> r.label
+                }
+            } ?: s.titleOf(path)
+    }
     fun add(path: String, kind: String) {
         if (!seen.add(path)) return
-        out += PaletteItem(s.titleOf(path), "$kind • $path", null, Icons.Outlined.Folder) { vm.navigate(path) }
+        out += PaletteItem(localizedTitle(path), "$kind • $path", null, Icons.Outlined.Folder) { vm.navigate(path) }
     }
     s.pins.forEach { add(it, vm.str(R.string.pinned_section)) }
     s.roots.forEach { add(it.path, vm.str(R.string.palette_kind_storage)) }

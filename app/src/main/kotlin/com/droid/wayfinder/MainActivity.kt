@@ -414,16 +414,15 @@ private fun PermissionScreen(onGrant: () -> Unit) {
     ) {
         Icon(Icons.Outlined.FolderOpen, null, Modifier.size(72.dp), tint = MaterialTheme.colorScheme.primary)
         Text(
-            "Allow access to all files",
+            androidx.compose.ui.res.stringResource(R.string.perm_all_files_title),
             Modifier.padding(top = 16.dp),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            "Wayfinder needs “All files access” to browse, copy and organise folders on this device. " +
-                "Nothing leaves your device except files you explicitly copy to a network share.",
+            androidx.compose.ui.res.stringResource(R.string.perm_all_files_body),
             Modifier.padding(top = 8.dp, bottom = 24.dp), textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Button(onGrant) { Text("Open settings") }
+        Button(onGrant) { Text(androidx.compose.ui.res.stringResource(R.string.perm_open_settings)) }
     }
 }

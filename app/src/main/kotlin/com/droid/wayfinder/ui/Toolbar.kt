@@ -113,23 +113,23 @@ fun Toolbar(vm: BrowserViewModel, s: AppState) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            NavButton(Icons.AutoMirrored.Outlined.ArrowBack, "Back (Alt+←)", tab.canGoBack) { vm.back() }
-            NavButton(Icons.AutoMirrored.Outlined.ArrowForward, "Forward (Alt+→)", tab.canGoForward) { vm.forward() }
-            NavButton(Icons.Outlined.ArrowUpward, "Up (Alt+↑)", FsPath.parent(tab.path) != null) { vm.up() }
+            NavButton(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.toolbar_back), tab.canGoBack) { vm.back() }
+            NavButton(Icons.AutoMirrored.Outlined.ArrowForward, stringResource(R.string.toolbar_forward), tab.canGoForward) { vm.forward() }
+            NavButton(Icons.Outlined.ArrowUpward, stringResource(R.string.toolbar_up), FsPath.parent(tab.path) != null) { vm.up() }
             PathBar(vm, s, Modifier.weight(1f))
             val iconBtnColors = IconButtonDefaults.iconButtonColors(
                 contentColor = cs.onSurfaceVariant,
                 disabledContentColor = cs.onSurface.copy(alpha = 0.38f),
             )
             IconButton({ vm.refresh() }, Modifier.size(40.dp), colors = iconBtnColors) {
-                Icon(Icons.Outlined.Refresh, if (s.dualPane) "Refresh (Ctrl+R)" else "Refresh (F5)")
+                Icon(Icons.Outlined.Refresh, if (s.dualPane) stringResource(R.string.toolbar_refresh_ctrl_r) else stringResource(R.string.toolbar_refresh_f5))
             }
             if (wide > 560.dp) {
                 IconButton({ vm.undo() }, Modifier.size(40.dp), enabled = s.canUndo, colors = iconBtnColors) {
-                    Icon(Icons.AutoMirrored.Outlined.Undo, "Undo (Ctrl+Z)")
+                    Icon(Icons.AutoMirrored.Outlined.Undo, stringResource(R.string.toolbar_undo))
                 }
                 IconButton({ vm.redo() }, Modifier.size(40.dp), enabled = s.canRedo, colors = iconBtnColors) {
-                    Icon(Icons.AutoMirrored.Outlined.Redo, "Redo (Ctrl+Y)")
+                    Icon(Icons.AutoMirrored.Outlined.Redo, stringResource(R.string.toolbar_redo))
                 }
             }
             SearchField(vm, s, Modifier.width(if (wide > 960.dp) 260.dp else if (wide > 720.dp) 190.dp else 140.dp))
@@ -150,20 +150,25 @@ private fun NavButton(icon: ImageVector, desc: String, enabled: Boolean, onClick
     FilledTonalIconButton(onClick, Modifier.size(40.dp), enabled = enabled) { Icon(icon, desc, Modifier.size(20.dp)) }
 }
 
-internal fun resolveAddress(input: String, s: AppState? = null): String? {
+internal fun resolveAddress(input: String, s: AppState? = null, extraRootLabels: Map<String, String> = emptyMap()): String? {
     val t = input.trim()
     if (t.isEmpty()) return null
     when {
         t.startsWith("/") -> return FsPath.normalize(t)
-        t.equals("trash", true) -> return FsPath.TRASH_ROOT
-        t.equals("network", true) -> return FsPath.SMB_ROOT
-        t.equals("recents", true) || t == FsPath.RECENTS_ROOT -> return FsPath.RECENTS_ROOT
-        t.equals("starred", true) || t == FsPath.STARRED_ROOT -> return FsPath.STARRED_ROOT
+        t.equals("trash", true) || t == "回收站" -> return FsPath.TRASH_ROOT
+        t.equals("network", true) || t == "网络" -> return FsPath.SMB_ROOT
+        t.equals("recents", true) || t == "最近" || t == "最近使用" || t == FsPath.RECENTS_ROOT -> return FsPath.RECENTS_ROOT
+        t.equals("starred", true) || t == "已加星标" || t == "标星" || t == FsPath.STARRED_ROOT -> return FsPath.STARRED_ROOT
         t.startsWith(FsPath.TAG_PREFIX) && FsPath.tagOf(t) != null -> return t
         FsPath.isDoc(t) || FsPath.isPhone(t) -> return FsPath.normalize(t)
     }
-    if (t.equals("phone", ignoreCase = true) || t.startsWith("phone/", ignoreCase = true)) {
-        val sub = if (t.length > 5) t.substring(6).trim('/') else ""
+    val phonePrefixLen = when {
+        t.equals("phone", ignoreCase = true) || t.startsWith("phone/", ignoreCase = true) -> 5
+        t == "手机" || t.startsWith("手机/") -> 2
+        else -> -1
+    }
+    if (phonePrefixLen > 0) {
+        val sub = if (t.length > phonePrefixLen) t.substring(phonePrefixLen + 1).trim('/') else ""
         val phoneRoot = s?.pairedPhone?.takeIf { it.isMounted && it.path != FsPath.PHONE_ROOT }?.path
         return when {
             phoneRoot != null && FsPath.isDoc(phoneRoot) -> com.droid.wayfinder.data.SystemDocumentsBridge.childPath(phoneRoot, sub)
@@ -172,8 +177,9 @@ internal fun resolveAddress(input: String, s: AppState? = null): String? {
             else -> FsPath.normalize("${FsPath.PHONE_ROOT}$sub")
         }
     }
-    if (s != null) {
-        val match = s.rootLabels.entries
+    val combinedLabels = if (s != null) s.rootLabels + extraRootLabels else extraRootLabels
+    if (combinedLabels.isNotEmpty()) {
+        val match = combinedLabels.entries
             .sortedByDescending { it.value.length }
             .firstOrNull { (_, label) ->
                 label.isNotBlank() && (t.equals(label, ignoreCase = true) || t.startsWith("$label/", ignoreCase = true))
@@ -197,10 +203,12 @@ private fun PathBar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
     val cs = MaterialTheme.colorScheme
     val tab = s.active
     val shape = RoundedCornerShape(24.dp)
+    val rootLabels = s.localizedRootLabels()
+    val addressBarDesc = stringResource(R.string.toolbar_address_bar)
     if (s.addressEditing) {
         val fr = remember { FocusRequester() }
-        val initialAddress = remember(tab.path, s.rootLabels) {
-            if (tab.path == FsPath.TRASH_ROOT) "" else s.displayPath(tab.path, "/")
+        val initialAddress = remember(tab.path, rootLabels) {
+            if (tab.path == FsPath.TRASH_ROOT) "" else FsPath.friendlyPath(tab.path, rootLabels, "/")
         }
         var tf by remember(tab.path) { mutableStateOf(TextFieldValue(initialAddress, TextRange(0, initialAddress.length))) }
         var hadFocus by remember { mutableStateOf(false) }
@@ -208,7 +216,7 @@ private fun PathBar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
         Row(modifier.heightIn(min = 40.dp).clip(shape).background(cs.surfaceContainerLowest).padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             BasicTextField(
                 tf, { tf = it }, Modifier.weight(1f).focusRequester(fr)
-                    .semantics { contentDescription = "Address bar" }
+                    .semantics { contentDescription = addressBarDesc }
                     .onFocusChanged {
                         // The initial (unfocused) event arrives before requestFocus(); only a real blur ends editing.
                         if (it.isFocused) { hadFocus = true; vm.setTextFocus(true) }
@@ -221,13 +229,13 @@ private fun PathBar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
                 cursorBrush = SolidColor(cs.primary),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
                 keyboardActions = KeyboardActions(onGo = {
-                    val p = resolveAddress(tf.text, s)
+                    val p = resolveAddress(tf.text, s, rootLabels)
                     if (p != null) vm.navigate(p) else if (!vm.openAddress(tf.text)) vm.setAddressEditing(false)
                 }),
             )
         }
     } else {
-        val crumbs = FsPath.breadcrumbs(tab.path, s.rootLabels)
+        val crumbs = FsPath.breadcrumbs(tab.path, rootLabels)
         val scroll = rememberScrollState()
         LaunchedEffect(tab.path, crumbs.size) { scroll.scrollTo(scroll.maxValue) }
         Row(
@@ -275,6 +283,7 @@ private fun SearchField(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
     val fr = remember { FocusRequester() }
     val focus = LocalFocusManager.current
     val searchA11yLabel = stringResource(R.string.search_placeholder)
+    val clearSearchLabel = stringResource(R.string.toolbar_clear_search)
     LaunchedEffect(s.focusSearch) { if (s.focusSearch > 0) fr.requestFocus() }
     Row(
         modifier.heightIn(min = 40.dp).clip(RoundedCornerShape(24.dp)).background(cs.surfaceContainerLowest)
@@ -302,10 +311,10 @@ private fun SearchField(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
         }
         if (tab.query.isNotEmpty()) {
             Box(
-                Modifier.size(28.dp).clip(CircleShape).clickable(role = Role.Button, onClickLabel = "Clear search") { vm.setQuery("") },
+                Modifier.size(28.dp).clip(CircleShape).clickable(role = Role.Button, onClickLabel = clearSearchLabel) { vm.setQuery("") },
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Outlined.Clear, "Clear search", Modifier.size(18.dp), tint = cs.onSurfaceVariant)
+                Icon(Icons.Outlined.Clear, clearSearchLabel, Modifier.size(18.dp), tint = cs.onSurfaceVariant)
             }
         }
     }
@@ -321,24 +330,24 @@ private fun SearchFilterRow(vm: BrowserViewModel, tab: TabState) {
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         SearchScope.entries.forEach { sc ->
-            FilterChip(f.scope == sc, { vm.setSearchFilter(f.copy(scope = sc)) }, label = { Text(sc.label) })
+            FilterChip(f.scope == sc, { vm.setSearchFilter(f.copy(scope = sc)) }, label = { Text(stringResource(sc.labelRes)) })
         }
         VerticalDivider(Modifier.height(20.dp), color = cs.outlineVariant)
-        ChipMenu(SearchCategory.entries, f.category, { it.label }, active = f.category != SearchCategory.All) { vm.setSearchFilter(f.copy(category = it)) }
-        ChipMenu(ModifiedRange.entries, f.modified, { it.label }, active = f.modified != ModifiedRange.Any) { vm.setSearchFilter(f.copy(modified = it)) }
+        ChipMenu(SearchCategory.entries, f.category, { stringResource(it.labelRes) }, active = f.category != SearchCategory.All) { vm.setSearchFilter(f.copy(category = it)) }
+        ChipMenu(ModifiedRange.entries, f.modified, { stringResource(it.labelRes) }, active = f.modified != ModifiedRange.Any) { vm.setSearchFilter(f.copy(modified = it)) }
         if (f.category != SearchCategory.All || f.modified != ModifiedRange.Any) {
-            TextButton({ vm.setSearchFilter(f.copy(category = SearchCategory.All, modified = ModifiedRange.Any)) }) { Text("Clear filters") }
+            TextButton({ vm.setSearchFilter(f.copy(category = SearchCategory.All, modified = ModifiedRange.Any)) }) { Text(stringResource(R.string.search_clear_filters)) }
         }
         val n = tab.searchResults?.size
         if (n != null) Text(
-            if (tab.searching) "${formatLocalizedNumber(n.toLong())} found so far…" else icuStringResource(R.string.search_result_count_plural, n),
+            if (tab.searching) stringResource(R.string.search_found_so_far, formatLocalizedNumber(n.toLong())) else icuStringResource(R.string.search_result_count_plural, n),
             style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
         )
     }
 }
 
 @Composable
-private fun <T> ChipMenu(options: List<T>, selected: T, label: (T) -> String, active: Boolean, onPick: (T) -> Unit) {
+private fun <T> ChipMenu(options: List<T>, selected: T, label: @Composable (T) -> String, active: Boolean, onPick: (T) -> Unit) {
     var open by remember { mutableStateOf(false) }
     Box {
         FilterChip(
@@ -361,10 +370,10 @@ private fun ViewToggle(vm: BrowserViewModel, mode: ViewMode, dual: Boolean) {
     val cs = MaterialTheme.colorScheme
     Row(Modifier.clip(RoundedCornerShape(20.dp)).background(cs.surfaceContainerHigh).padding(2.dp)) {
         listOf(
-            Triple(ViewMode.Details, Icons.AutoMirrored.Outlined.ViewList, "Details (Ctrl+1)"),
-            Triple(ViewMode.List, Icons.Outlined.ViewHeadline, "List"),
-            Triple(ViewMode.Grid, Icons.Outlined.GridView, "Grid (Ctrl+2)"),
-            Triple(ViewMode.Columns, Icons.Outlined.ViewColumn, "Columns (Ctrl+3)"),
+            Triple(ViewMode.Details, Icons.AutoMirrored.Outlined.ViewList, stringResource(R.string.toolbar_view_details)),
+            Triple(ViewMode.List, Icons.Outlined.ViewHeadline, stringResource(R.string.toolbar_view_list)),
+            Triple(ViewMode.Grid, Icons.Outlined.GridView, stringResource(R.string.toolbar_view_grid)),
+            Triple(ViewMode.Columns, Icons.Outlined.ViewColumn, stringResource(R.string.toolbar_view_columns)),
         ).forEach { (m, icon, desc) ->
             val sel = m == mode
             Box(
@@ -379,6 +388,8 @@ private fun ViewToggle(vm: BrowserViewModel, mode: ViewMode, dual: Boolean) {
                 contentAlignment = Alignment.Center,
             ) { Icon(icon, desc, Modifier.size(20.dp), tint = if (sel) cs.onSecondaryContainer else cs.onSurfaceVariant) }
         }
+        val toggleDualLabel = stringResource(R.string.toolbar_toggle_dual_pane)
+        val dualDesc = stringResource(R.string.toolbar_dual_pane)
         Box(
             Modifier.size(width = 40.dp, height = 36.dp)
                 .semantics {
@@ -387,9 +398,9 @@ private fun ViewToggle(vm: BrowserViewModel, mode: ViewMode, dual: Boolean) {
                 }
                 .clip(RoundedCornerShape(18.dp))
                 .background(if (dual) cs.tertiaryContainer else androidx.compose.ui.graphics.Color.Transparent)
-                .clickable(role = Role.Checkbox, onClickLabel = "Toggle dual pane") { vm.toggleDualPane() },
+                .clickable(role = Role.Checkbox, onClickLabel = toggleDualLabel) { vm.toggleDualPane() },
             contentAlignment = Alignment.Center,
-        ) { Icon(Icons.Outlined.VerticalSplit, "Dual pane (Ctrl+4 / F3)", Modifier.size(20.dp), tint = if (dual) cs.onTertiaryContainer else cs.onSurfaceVariant) }
+        ) { Icon(Icons.Outlined.VerticalSplit, dualDesc, Modifier.size(20.dp), tint = if (dual) cs.onTertiaryContainer else cs.onSurfaceVariant) }
     }
 }
 
@@ -409,8 +420,12 @@ private fun SortButton(vm: BrowserViewModel, s: AppState) {
         }
         DropdownMenu(open, { open = false }) {
             listOf(
-                SortKey.Name to "Name", SortKey.Modified to "Date modified", SortKey.Type to "Type", SortKey.Size to "Size",
-                SortKey.Tags to "Tags", SortKey.Permissions to "Permissions",
+                SortKey.Name to stringResource(R.string.col_name),
+                SortKey.Modified to stringResource(R.string.col_date_modified),
+                SortKey.Type to stringResource(R.string.col_type),
+                SortKey.Size to stringResource(R.string.col_size),
+                SortKey.Tags to stringResource(R.string.col_tags),
+                SortKey.Permissions to stringResource(R.string.col_permissions),
             ).forEach { (k, label) ->
                 DropdownMenuItem(
                     { Text(label) },
@@ -420,11 +435,11 @@ private fun SortButton(vm: BrowserViewModel, s: AppState) {
             }
             HorizontalDivider()
             DropdownMenuItem(
-                { Text("Ascending") }, { vm.setSort(tab.sortKey, true); open = false },
+                { Text(stringResource(R.string.sort_ascending)) }, { vm.setSort(tab.sortKey, true); open = false },
                 leadingIcon = { if (tab.sortAsc) Icon(Icons.Filled.Check, null, Modifier.size(18.dp)) else Box(Modifier.size(18.dp)) },
             )
             DropdownMenuItem(
-                { Text("Descending") }, { vm.setSort(tab.sortKey, false); open = false },
+                { Text(stringResource(R.string.sort_descending)) }, { vm.setSort(tab.sortKey, false); open = false },
                 leadingIcon = { if (!tab.sortAsc) Icon(Icons.Filled.Check, null, Modifier.size(18.dp)) else Box(Modifier.size(18.dp)) },
             )
         }
@@ -442,38 +457,38 @@ private fun OverflowMenu(vm: BrowserViewModel, s: AppState, showViewItems: Boole
             { open = true },
             Modifier.size(40.dp),
             colors = IconButtonDefaults.iconButtonColors(contentColor = cs.onSurfaceVariant),
-        ) { Icon(Icons.Outlined.MoreVert, "More") }
+        ) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.toolbar_more)) }
         DropdownMenu(open, { open = false }) {
-            DropdownMenuItem({ Text("New folder") }, { open = false; vm.requestNewItem(true) }, enabled = !virtual, trailingIcon = { Hint("Ctrl+Shift+N") })
-            DropdownMenuItem({ Text("New text file") }, { open = false; vm.requestNewItem(false) }, enabled = !virtual, trailingIcon = { Hint("Ctrl+Shift+M") })
-            DropdownMenuItem({ Text("Select all") }, { open = false; vm.selectAll() }, trailingIcon = { Hint("Ctrl+A") })
+            DropdownMenuItem({ Text(stringResource(R.string.action_new_folder)) }, { open = false; vm.requestNewItem(true) }, enabled = !virtual, trailingIcon = { Hint("Ctrl+Shift+N") })
+            DropdownMenuItem({ Text(stringResource(R.string.action_new_text_file)) }, { open = false; vm.requestNewItem(false) }, enabled = !virtual, trailingIcon = { Hint("Ctrl+Shift+M") })
+            DropdownMenuItem({ Text(stringResource(R.string.action_select_all)) }, { open = false; vm.selectAll() }, trailingIcon = { Hint("Ctrl+A") })
             val pinTargets = s.active.selectedEntries(s.showHidden).filter { !it.isServer && !it.isShare && !FsPath.isZip(it.path) && !FsPath.isVirtual(it.path) }.map { it.path }
                 .ifEmpty { listOf(s.active.path).filter { !FsPath.isVirtual(it) && !FsPath.isZip(it) } }
             if (pinTargets.isNotEmpty()) {
                 val pinned = pinTargets.all { it in s.pins }
                 DropdownMenuItem(
-                    { Text(if (pinned) "Unpin from sidebar" else "Pin to sidebar") },
+                    { Text(if (pinned) stringResource(R.string.action_unpin_from_sidebar) else stringResource(R.string.action_pin_to_sidebar)) },
                     { open = false; vm.togglePins(pinTargets) },
                     trailingIcon = { Hint("Ctrl+B") },
                 )
             }
-            DropdownMenuItem({ Text("Batch rename…") }, { open = false; vm.requestBatchRename() }, enabled = !virtual, trailingIcon = { Hint("Ctrl+Shift+R") })
-            DropdownMenuItem({ Text("Undo") }, { open = false; vm.undo() }, enabled = s.canUndo, trailingIcon = { Hint("Ctrl+Z") })
-            DropdownMenuItem({ Text("Redo") }, { open = false; vm.redo() }, enabled = s.canRedo, trailingIcon = { Hint("Ctrl+Y") })
+            DropdownMenuItem({ Text(stringResource(R.string.action_batch_rename)) }, { open = false; vm.requestBatchRename() }, enabled = !virtual, trailingIcon = { Hint("Ctrl+Shift+R") })
+            DropdownMenuItem({ Text(stringResource(R.string.action_undo)) }, { open = false; vm.undo() }, enabled = s.canUndo, trailingIcon = { Hint("Ctrl+Z") })
+            DropdownMenuItem({ Text(stringResource(R.string.action_redo)) }, { open = false; vm.redo() }, enabled = s.canRedo, trailingIcon = { Hint("Ctrl+Y") })
             HorizontalDivider()
-            DropdownMenuItem({ Text("Show hidden files") }, { open = false; vm.toggleHidden() }, leadingIcon = check(s.showHidden), trailingIcon = { Hint("Ctrl+H") })
-            DropdownMenuItem({ Text("Preview pane") }, { open = false; vm.togglePreview() }, leadingIcon = check(s.previewVisible), trailingIcon = { Hint("Alt+P") })
-            DropdownMenuItem({ Text("Sidebar") }, { open = false; vm.toggleSidebar() }, leadingIcon = check(s.sidebarVisible), trailingIcon = { Hint("Ctrl+\\") })
-            DropdownMenuItem({ Text("Dual pane") }, { open = false; vm.toggleDualPane() }, leadingIcon = check(s.dualPane), trailingIcon = { Hint("Ctrl+4") })
-            DropdownMenuItem({ Text("Tags column") }, { open = false; vm.toggleTagsColumn() }, leadingIcon = check(s.tagsColumn))
-            DropdownMenuItem({ Text("Permissions column") }, { open = false; vm.togglePermsColumn() }, leadingIcon = check(s.permsColumn))
+            DropdownMenuItem({ Text(stringResource(R.string.action_show_hidden_files)) }, { open = false; vm.toggleHidden() }, leadingIcon = check(s.showHidden), trailingIcon = { Hint("Ctrl+H") })
+            DropdownMenuItem({ Text(stringResource(R.string.overflow_preview_pane)) }, { open = false; vm.togglePreview() }, leadingIcon = check(s.previewVisible), trailingIcon = { Hint("Alt+P") })
+            DropdownMenuItem({ Text(stringResource(R.string.overflow_sidebar)) }, { open = false; vm.toggleSidebar() }, leadingIcon = check(s.sidebarVisible), trailingIcon = { Hint("Ctrl+\\") })
+            DropdownMenuItem({ Text(stringResource(R.string.overflow_dual_pane)) }, { open = false; vm.toggleDualPane() }, leadingIcon = check(s.dualPane), trailingIcon = { Hint("Ctrl+4") })
+            DropdownMenuItem({ Text(stringResource(R.string.overflow_tags_column)) }, { open = false; vm.toggleTagsColumn() }, leadingIcon = check(s.tagsColumn))
+            DropdownMenuItem({ Text(stringResource(R.string.overflow_perms_column)) }, { open = false; vm.togglePermsColumn() }, leadingIcon = check(s.permsColumn))
             if (showViewItems) {
                 HorizontalDivider()
                 listOf(
-                    ViewMode.Details to "Details view",
-                    ViewMode.List to "List view",
-                    ViewMode.Grid to "Grid view",
-                    ViewMode.Columns to "Columns view",
+                    ViewMode.Details to stringResource(R.string.overflow_view_details),
+                    ViewMode.List to stringResource(R.string.overflow_view_list),
+                    ViewMode.Grid to stringResource(R.string.overflow_view_grid),
+                    ViewMode.Columns to stringResource(R.string.overflow_view_columns),
                 ).forEach { (m, label) ->
                     DropdownMenuItem(
                         { Text(label) },
@@ -485,10 +500,10 @@ private fun OverflowMenu(vm: BrowserViewModel, s: AppState, showViewItems: Boole
             if (showSortItems) {
                 HorizontalDivider()
                 listOf(
-                    SortKey.Name to "Sort by Name",
-                    SortKey.Modified to "Sort by Date modified",
-                    SortKey.Type to "Sort by Type",
-                    SortKey.Size to "Sort by Size",
+                    SortKey.Name to stringResource(R.string.overflow_sort_by_name),
+                    SortKey.Modified to stringResource(R.string.overflow_sort_by_modified),
+                    SortKey.Type to stringResource(R.string.overflow_sort_by_type),
+                    SortKey.Size to stringResource(R.string.overflow_sort_by_size),
                 ).forEach { (k, label) ->
                     DropdownMenuItem(
                         { Text(label) },
@@ -497,23 +512,28 @@ private fun OverflowMenu(vm: BrowserViewModel, s: AppState, showViewItems: Boole
                     )
                 }
                 DropdownMenuItem(
-                    { Text(if (s.active.sortAsc) "Sort descending" else "Sort ascending") },
+                    { Text(if (s.active.sortAsc) stringResource(R.string.overflow_sort_descending) else stringResource(R.string.overflow_sort_ascending)) },
                     { open = false; vm.setSort(s.active.sortKey, !s.active.sortAsc) },
                     leadingIcon = { Box(Modifier.size(18.dp)) },
                 )
             }
             HorizontalDivider()
-            DropdownMenuItem({ Text("Theme: ${s.theme.label}") }, { vm.cycleTheme() }, leadingIcon = { Box(Modifier.size(18.dp)) }, trailingIcon = { Hint("Light / Dark / System") })
-            DropdownMenuItem({ Text("Zoom in") }, { vm.zoomBy(1) }, leadingIcon = { Box(Modifier.size(18.dp)) }, trailingIcon = { Hint("Ctrl+=") })
-            DropdownMenuItem({ Text("Zoom out") }, { vm.zoomBy(-1) }, leadingIcon = { Box(Modifier.size(18.dp)) }, trailingIcon = { Hint("Ctrl+-") })
-            DropdownMenuItem({ Text("Reset zoom (${(s.zoom * 100).toInt()}%)") }, { open = false; vm.zoomBy(0) }, leadingIcon = { Box(Modifier.size(18.dp)) }, trailingIcon = { Hint("Ctrl+0") })
+            DropdownMenuItem(
+                { Text(stringResource(R.string.overflow_theme_format, stringResource(s.theme.labelRes))) },
+                { vm.cycleTheme() },
+                leadingIcon = { Box(Modifier.size(18.dp)) },
+                trailingIcon = { Hint(stringResource(R.string.overflow_theme_hint)) },
+            )
+            DropdownMenuItem({ Text(stringResource(R.string.overflow_zoom_in)) }, { vm.zoomBy(1) }, leadingIcon = { Box(Modifier.size(18.dp)) }, trailingIcon = { Hint("Ctrl+=") })
+            DropdownMenuItem({ Text(stringResource(R.string.overflow_zoom_out)) }, { vm.zoomBy(-1) }, leadingIcon = { Box(Modifier.size(18.dp)) }, trailingIcon = { Hint("Ctrl+-") })
+            DropdownMenuItem({ Text(stringResource(R.string.overflow_reset_zoom, (s.zoom * 100).toInt())) }, { open = false; vm.zoomBy(0) }, leadingIcon = { Box(Modifier.size(18.dp)) }, trailingIcon = { Hint("Ctrl+0") })
             HorizontalDivider()
-            DropdownMenuItem({ Text("New window") }, { open = false; vm.newWindow() }, trailingIcon = { Hint("Ctrl+N") })
-            DropdownMenuItem({ Text("Command palette…") }, { open = false; vm.openPalette() }, trailingIcon = { Hint("Ctrl+K") })
-            DropdownMenuItem({ Text("Connect to server…") }, { open = false; vm.showConnectDialog() }, trailingIcon = { Hint("Ctrl+Shift+K") })
-            DropdownMenuItem({ Text("Default file handler…") }, { open = false; vm.showDefaultHandlerDialog() })
-            DropdownMenuItem({ Text("Keyboard shortcuts") }, { open = false; vm.showDialog(Dialog.Shortcuts) }, trailingIcon = { Hint("F1") })
-            DropdownMenuItem({ Text("About Wayfinder") }, { open = false; vm.showDialog(Dialog.About) })
+            DropdownMenuItem({ Text(stringResource(R.string.action_new_window)) }, { open = false; vm.newWindow() }, trailingIcon = { Hint("Ctrl+N") })
+            DropdownMenuItem({ Text(stringResource(R.string.overflow_command_palette)) }, { open = false; vm.openPalette() }, trailingIcon = { Hint("Ctrl+K") })
+            DropdownMenuItem({ Text(stringResource(R.string.action_connect_to_server)) }, { open = false; vm.showConnectDialog() }, trailingIcon = { Hint("Ctrl+Shift+K") })
+            DropdownMenuItem({ Text(stringResource(R.string.overflow_default_handler)) }, { open = false; vm.showDefaultHandlerDialog() })
+            DropdownMenuItem({ Text(stringResource(R.string.overflow_keyboard_shortcuts)) }, { open = false; vm.showDialog(Dialog.Shortcuts) }, trailingIcon = { Hint("F1") })
+            DropdownMenuItem({ Text(stringResource(R.string.overflow_about_wayfinder)) }, { open = false; vm.showDialog(Dialog.About) })
         }
     }
 }

@@ -152,11 +152,12 @@ private fun PropertiesDialog(d: Dialog.Properties, s: AppState, onDismiss: () ->
         text = {
             Column(Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (e.size == 1) {
-                    val shownPath = if (FsPath.isDoc(e[0].path) || FsPath.isPhone(e[0].path)) s.displayPath(e[0].path, "/") else e[0].path
-                    Row2("Name", e[0].name)
-                    Row2("Kind", e[0].typeLabel)
-                    Row2("Path", shownPath, mono = true) { onCopy(shownPath, "Path") }
-                    Row2("Modified", formatDateFull(e[0].modified))
+                    val shownPath = if (FsPath.isDoc(e[0].path) || FsPath.isPhone(e[0].path)) s.localizedDisplayPath(e[0].path, "/") else e[0].path
+                    val pathLabel = stringResource(R.string.prop_label_path)
+                    Row2(stringResource(R.string.prop_label_name), e[0].name)
+                    Row2(stringResource(R.string.prop_label_kind), e[0].localizedTypeLabel())
+                    Row2(pathLabel, shownPath, mono = true) { onCopy(shownPath, pathLabel) }
+                    Row2(stringResource(R.string.prop_label_modified), formatDateFull(e[0].modified))
                 }
                 Row2(stringResource(R.string.properties_size_label), d.bytes?.let { "${formatSize(it)} (${icuStringResource(R.string.byte_count_plural, it)})" } ?: stringResource(R.string.properties_calculating))
                 d.items?.let { if (e.size > 1 || e[0].isDir) Row2(stringResource(R.string.properties_files_label), formatLocalizedNumber(it.toLong())) }
@@ -199,7 +200,7 @@ private fun Row2(label: String, value: String, mono: Boolean = false, onCopy: ((
         androidx.compose.foundation.text.selection.SelectionContainer(Modifier.weight(1f)) {
             Text(value, style = MaterialTheme.typography.bodyMedium, fontFamily = if (mono) FontFamily.Monospace else null)
         }
-        if (onCopy != null) IconButton(onCopy, Modifier.size(32.dp)) { Icon(Icons.Outlined.ContentCopy, "Copy $label", Modifier.size(16.dp)) }
+        if (onCopy != null) IconButton(onCopy, Modifier.size(32.dp)) { Icon(Icons.Outlined.ContentCopy, stringResource(R.string.prop_copy_label, label), Modifier.size(16.dp)) }
     }
 }
 
@@ -252,43 +253,43 @@ private fun SmbDialog(
 }
 
 private val shortcuts = listOf(
-    "Tabs & windows" to listOf(
-        "New tab" to "Ctrl+T", "Close tab" to "Ctrl+W", "Next / previous tab" to "Ctrl+Tab / Ctrl+Shift+Tab",
-        "Go to tab 1–9" to "Alt+1 … Alt+9", "Reopen closed tab" to "Ctrl+Shift+T", "Open folder in new tab" to "Ctrl+Enter / middle-click",
-        "Command palette" to "Ctrl+K", "New window" to "Ctrl+N",
+    R.string.shortcuts_group_tabs to listOf(
+        R.string.shortcuts_new_tab to "Ctrl+T", R.string.shortcuts_close_tab to "Ctrl+W", R.string.shortcuts_next_prev_tab to "Ctrl+Tab / Ctrl+Shift+Tab",
+        R.string.shortcuts_goto_tab to "Alt+1 … Alt+9", R.string.shortcuts_reopen_tab to "Ctrl+Shift+T", R.string.shortcuts_open_in_new_tab to "Ctrl+Enter / middle-click",
+        R.string.shortcuts_command_palette to "Ctrl+K", R.string.action_new_window to "Ctrl+N",
     ),
-    "Navigate" to listOf(
-        "Back / forward" to "Alt+← / Alt+→ or Backspace", "Up one level" to "Alt+↑", "Open" to "Enter / double-click", "Quick Look preview" to "Space",
-        "Address bar" to "Ctrl+L or Alt+D", "Search" to "Ctrl+F or Ctrl+E", "Refresh" to "F5 / Ctrl+R", "Connect to server" to "Ctrl+Shift+K",
+    R.string.shortcuts_group_navigate to listOf(
+        R.string.shortcuts_back_forward to "Alt+← / Alt+→ or Backspace", R.string.shortcuts_up_one_level to "Alt+↑", R.string.action_open to "Enter / double-click", R.string.shortcuts_quick_look to "Space",
+        R.string.shortcuts_address_bar to "Ctrl+L or Alt+D", R.string.shortcuts_search to "Ctrl+F or Ctrl+E", R.string.action_refresh to "F5 / Ctrl+R", R.string.shortcuts_connect_server to "Ctrl+Shift+K",
     ),
-    "Select & edit" to listOf(
-        "Select all / invert / none" to "Ctrl+A / Ctrl+Shift+I / Ctrl+Shift+A", "Extend selection" to "Shift+↑↓←→ / Shift+click", "Toggle item" to "Ctrl+click / Ctrl+Space",
-        "Cut / copy / paste" to "Ctrl+X / Ctrl+C / Ctrl+V", "Undo / redo" to "Ctrl+Z / Ctrl+Y or Ctrl+Shift+Z", "Duplicate" to "Ctrl+D",
-        "Rename / batch rename" to "F2 / Ctrl+Shift+R", "Copy path" to "Ctrl+Shift+C",
-        "Delete / delete permanently" to "Del / Shift+Del", "New folder / text file" to "Ctrl+Shift+N / Ctrl+Shift+M", "Properties" to "Ctrl+I / Alt+Enter",
+    R.string.shortcuts_group_select_edit to listOf(
+        R.string.shortcuts_select_all_invert_none to "Ctrl+A / Ctrl+Shift+I / Ctrl+Shift+A", R.string.shortcuts_extend_selection to "Shift+↑↓←→ / Shift+click", R.string.shortcuts_toggle_item to "Ctrl+click / Ctrl+Space",
+        R.string.shortcuts_cut_copy_paste to "Ctrl+X / Ctrl+C / Ctrl+V", R.string.shortcuts_undo_redo to "Ctrl+Z / Ctrl+Y or Ctrl+Shift+Z", R.string.action_duplicate to "Ctrl+D",
+        R.string.shortcuts_rename_batch to "F2 / Ctrl+Shift+R", R.string.action_copy_path to "Ctrl+Shift+C",
+        R.string.shortcuts_delete_perm to "Del / Shift+Del", R.string.shortcuts_new_folder_file to "Ctrl+Shift+N / Ctrl+Shift+M", R.string.action_properties to "Ctrl+I / Alt+Enter",
     ),
-    "View" to listOf(
-        "Details / grid / columns" to "Ctrl+1 / Ctrl+2 / Ctrl+3", "Zoom grid" to "Ctrl+scroll", "Hidden files" to "Ctrl+H",
-        "Pin / unpin folder" to "Ctrl+B", "Sidebar" to "Ctrl+\\", "Details pane" to "Alt+P",
-        "Locate folder in tree" to "Alt+Shift+L", "Interface zoom in / out / reset" to "Ctrl+= / Ctrl+- / Ctrl+0", "This help" to "F1",
+    R.string.shortcuts_group_view to listOf(
+        R.string.shortcuts_view_modes to "Ctrl+1 / Ctrl+2 / Ctrl+3", R.string.shortcuts_zoom_grid to "Ctrl+scroll", R.string.shortcuts_hidden_files to "Ctrl+H",
+        R.string.shortcuts_pin_unpin to "Ctrl+B", R.string.shortcuts_sidebar to "Ctrl+\\", R.string.details_pane_title to "Alt+P",
+        R.string.shortcuts_locate_in_tree to "Alt+Shift+L", R.string.shortcuts_ui_zoom to "Ctrl+= / Ctrl+- / Ctrl+0", R.string.shortcuts_this_help to "F1",
     ),
-    "Dual pane" to listOf(
-        "Toggle dual pane" to "Ctrl+4 / F3", "Switch active pane" to "Tab", "Copy / move to other pane" to "F5 / F6",
+    R.string.shortcuts_group_dual_pane to listOf(
+        R.string.shortcuts_toggle_dual_pane to "Ctrl+4 / F3", R.string.shortcuts_switch_active_pane to "Tab", R.string.shortcuts_copy_move_other_pane to "F5 / F6",
     ),
 )
 
 @Composable
 private fun ShortcutsDialog(onDismiss: () -> Unit) {
     AlertDialog(
-        onDismissRequest = onDismiss, title = { Text("Keyboard & trackpad shortcuts") },
+        onDismissRequest = onDismiss, title = { Text(stringResource(R.string.shortcuts_dialog_title)) },
         modifier = Modifier.widthIn(max = 560.dp).fillMaxWidth(),
         text = {
             Column(Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState())) {
-                shortcuts.forEach { (group, items) ->
-                    Text(group, Modifier.padding(top = 10.dp, bottom = 4.dp), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                    items.forEach { (a, k) ->
+                shortcuts.forEach { (groupRes, items) ->
+                    Text(stringResource(groupRes), Modifier.padding(top = 10.dp, bottom = 4.dp), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    items.forEach { (aRes, k) ->
                         Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
-                            Text(a, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(aRes), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                             Text(k, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
@@ -310,13 +311,14 @@ private enum class RenameMode(@param:androidx.annotation.StringRes val labelRes:
 @Composable
 private fun BatchRenameDialog(d: Dialog.BatchRename, onDismiss: () -> Unit, onApply: (List<RenamePlan>) -> Unit) {
     val cs = MaterialTheme.colorScheme
+    val defaultBase = stringResource(R.string.kind_file)
     var mode by remember { mutableStateOf(RenameMode.FindReplace) }
     var find by remember { mutableStateOf("") }
     var replace by remember { mutableStateOf("") }
     var matchCase by remember { mutableStateOf(false) }
     var prefix by remember { mutableStateOf("") }
     var suffix by remember { mutableStateOf("") }
-    var base by remember { mutableStateOf(FsPath.name(d.dir).ifEmpty { "File" }) }
+    var base by remember { mutableStateOf(FsPath.name(d.dir).ifEmpty { defaultBase }) }
     var start by remember { mutableStateOf("1") }
     val rule = when (mode) {
         RenameMode.FindReplace -> RenameRule.FindReplace(find, replace, matchCase)
@@ -329,7 +331,7 @@ private fun BatchRenameDialog(d: Dialog.BatchRename, onDismiss: () -> Unit, onAp
     AlertDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.widthIn(max = 560.dp).fillMaxWidth(),
-        title = { Text(if (d.items.size == 1) "Rename 1 item" else "Batch rename ${d.items.size} items") },
+        title = { Text(icuStringResource(R.string.batch_rename_dialog_title_plural, d.items.size)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -370,6 +372,7 @@ private fun BatchRenameDialog(d: Dialog.BatchRename, onDismiss: () -> Unit, onAp
                     LazyColumn(Modifier.fillMaxWidth().heightIn(max = 260.dp).padding(vertical = 4.dp)) {
                         items(plan) { p ->
                             val bad = p.conflict != null
+                            val conflictText = p.conflict?.let { localizeRenameConflict(it) }
                             Row(
                                 Modifier.fillMaxWidth().background(if (bad) cs.errorContainer else Color.Transparent).padding(horizontal = 12.dp, vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -377,7 +380,7 @@ private fun BatchRenameDialog(d: Dialog.BatchRename, onDismiss: () -> Unit, onAp
                                 Text(p.old, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (bad) cs.onErrorContainer else cs.onSurfaceVariant)
                                 Text("→", Modifier.padding(horizontal = 8.dp), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
                                 Text(
-                                    p.new + (p.conflict?.let { "  ($it)" } ?: ""), Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, maxLines = 1,
+                                    p.new + (conflictText?.let { "  ($it)" } ?: ""), Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, maxLines = 1,
                                     overflow = TextOverflow.Ellipsis, color = if (bad) cs.onErrorContainer else if (p.changed) cs.onSurface else cs.onSurfaceVariant,
                                 )
                             }
@@ -431,7 +434,7 @@ private fun SafMountTipDialog(accountEmail: String? = null, onDismiss: () -> Uni
                             if (isDrive) {
                                 stringResource(R.string.saf_tip_drive_why_body)
                             } else {
-                                "In the file picker, open any folder inside your Drive or storage (e.g. Work, Documents, or create a new folder).\n\nAndroid blocks selecting the top-level root (\"My Drive\") for privacy, but any subfolder is fully allowed."
+                                stringResource(R.string.saf_tip_generic_why_body)
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = cs.onSurfaceVariant,
@@ -467,7 +470,7 @@ private fun SafMountTipDialog(accountEmail: String? = null, onDismiss: () -> Uni
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         },
     )
@@ -478,6 +481,7 @@ private fun AboutDialog(onDismiss: () -> Unit) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val cs = MaterialTheme.colorScheme
     var showLicenses by remember { mutableStateOf(false) }
+    val unavailMsg = stringResource(R.string.about_notices_unavailable)
     val versionName = remember(ctx) {
         runCatching { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName }.getOrNull()?.takeIf { it.isNotBlank() }
     }
@@ -486,7 +490,7 @@ private fun AboutDialog(onDismiss: () -> Unit) {
             value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 runCatching {
                     ctx.assets.open("THIRD_PARTY_NOTICES.md").bufferedReader().use { it.readText() }
-                }.getOrDefault("Open-source notices unavailable.")
+                }.getOrDefault(unavailMsg)
             }
         }
     }
@@ -494,19 +498,19 @@ private fun AboutDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.widthIn(max = 560.dp).fillMaxWidth(),
-        title = { Text(if (showLicenses) "Open-source licenses" else "About Wayfinder") },
+        title = { Text(stringResource(if (showLicenses) R.string.about_licenses_title else R.string.about_dialog_title)) },
         text = {
             if (!showLicenses) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     // The version line is left out if the installed version can't be read.
-                    if (versionName != null) Text("Version $versionName", style = MaterialTheme.typography.titleSmall, color = cs.primary)
+                    if (versionName != null) Text(stringResource(R.string.about_version_format, versionName), style = MaterialTheme.typography.titleSmall, color = cs.primary)
                     Text(
-                        "Desktop-class file manager for Android laptops and tablets with multi-tab browsing, dual-pane transfers, archive support, and SMB / WebDAV / FTP networking.",
+                        stringResource(R.string.about_description),
                         style = MaterialTheme.typography.bodyMedium,
                         color = cs.onSurface,
                     )
                     Text(
-                        "Copyright 2026 The Wayfinder Authors. Licensed under the Apache License, Version 2.0.",
+                        stringResource(R.string.about_copyright),
                         style = MaterialTheme.typography.bodySmall,
                         color = cs.onSurfaceVariant,
                     )
@@ -515,7 +519,7 @@ private fun AboutDialog(onDismiss: () -> Unit) {
                 Surface(shape = RoundedCornerShape(12.dp), color = cs.surfaceContainerLow) {
                     androidx.compose.foundation.text.selection.SelectionContainer {
                         Text(
-                            text = noticesText ?: "Loading notices…",
+                            text = noticesText ?: stringResource(R.string.about_loading_notices),
                             modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp).verticalScroll(rememberScrollState()).padding(12.dp),
                             style = MaterialTheme.typography.bodySmall,
                             fontFamily = FontFamily.Monospace,
@@ -527,11 +531,11 @@ private fun AboutDialog(onDismiss: () -> Unit) {
         },
         dismissButton = {
             TextButton(onClick = { showLicenses = !showLicenses }) {
-                Text(if (showLicenses) "Back" else "Open-source licenses")
+                Text(stringResource(if (showLicenses) R.string.nav_back else R.string.about_licenses_title))
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) }
         },
     )
 }
@@ -568,14 +572,14 @@ private fun DefaultHandlerDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth(),
-        title = { Text("Make Wayfinder your default file handler?") },
+        title = { Text(stringResource(R.string.default_handler_title)) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    "Wayfinder is registered to handle supported file and folder actions across Android:",
+                    stringResource(R.string.default_handler_intro),
                     style = MaterialTheme.typography.bodyMedium,
                     color = cs.onSurface,
                 )
@@ -585,11 +589,9 @@ private fun DefaultHandlerDialog(onDismiss: () -> Unit) {
                     border = BorderStroke(1.dp, cs.outlineVariant),
                 ) {
                     Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("Supported file types & actions", style = MaterialTheme.typography.titleSmall, color = cs.primary)
+                        Text(stringResource(R.string.default_handler_supported_title), style = MaterialTheme.typography.titleSmall, color = cs.primary)
                         Text(
-                            "• Folders & Downloads — Open folders and system \"View Downloads\" shortcuts directly in Wayfinder.\n" +
-                                "• Archives (.zip, .tar.gz, .tgz, .tar) — Browse and extract archives inline as virtual folders.\n" +
-                                "• File Picker (Open / Save As) — Attach or save files when prompted by browsers, email, and other apps.",
+                            stringResource(R.string.default_handler_supported_body),
                             style = MaterialTheme.typography.bodySmall,
                             color = cs.onSurface,
                         )
@@ -603,12 +605,10 @@ private fun DefaultHandlerDialog(onDismiss: () -> Unit) {
                     Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Icon(Icons.Outlined.Info, null, Modifier.size(18.dp), tint = cs.primary)
-                            Text("How to set or change anytime", style = MaterialTheme.typography.titleSmall, color = cs.primary)
+                            Text(stringResource(R.string.default_handler_howto_title), style = MaterialTheme.typography.titleSmall, color = cs.primary)
                         }
                         Text(
-                            "1. To set Wayfinder as default: Tap \"Test Open-With Prompt\" below (or open any folder or archive), select Wayfinder in Android's prompt, and tap \"Always\".\n\n" +
-                                "2. If the system Files app opens automatically without asking: Go to Android Settings → Apps → See all apps → Files → Open by default → Clear default preferences.\n\n" +
-                                "3. Change or reset anytime: You can change or remove Wayfinder as your default handler at any time in Android Settings → Apps → Wayfinder → Open by default → Clear default preferences (or reopen this guide from ⋮ More → Default file handler…).",
+                            stringResource(R.string.default_handler_howto_body),
                             style = MaterialTheme.typography.bodySmall,
                             color = cs.onSurfaceVariant,
                         )
@@ -619,16 +619,16 @@ private fun DefaultHandlerDialog(onDismiss: () -> Unit) {
         confirmButton = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 androidx.compose.material3.OutlinedButton(onClick = { onDismiss(); triggerOpenWithPrompt() }) {
-                    Text("Test Open-With Prompt")
+                    Text(stringResource(R.string.default_handler_test_prompt))
                 }
                 Button(onClick = { onDismiss(); openAppDefaultSettings() }) {
-                    Text("App Default Settings")
+                    Text(stringResource(R.string.default_handler_app_settings))
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Not now")
+                Text(stringResource(R.string.default_handler_not_now))
             }
         },
     )

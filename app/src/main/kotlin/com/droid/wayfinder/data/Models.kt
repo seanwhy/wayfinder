@@ -3,11 +3,18 @@
 
 package com.droid.wayfinder.data
 
+import androidx.annotation.StringRes
+import com.droid.wayfinder.R
+
 enum class ViewMode { Details, List, Grid, Columns }
 
 enum class SortKey { Name, Modified, Type, Size, Tags, Permissions }
 
-enum class ThemeMode(val label: String) { System("System"), Light("Light"), Dark("Dark") }
+enum class ThemeMode(val label: String, @StringRes val labelRes: Int) {
+    System("System", R.string.theme_system),
+    Light("Light", R.string.theme_light),
+    Dark("Dark", R.string.theme_dark),
+}
 
 /** Google Drive account discovered on the device. */
 data class DriveAccount(
@@ -36,20 +43,34 @@ data class PairedPhone(
 )
 
 /** Finder-style color labels; [argb] is the dot color. */
-enum class ColorTag(val label: String, val argb: Long) {
-    Urgent("Urgent", 0xFFD93025), Review("Review", 0xFFE8710A), WIP("WIP", 0xFFF9AB00),
-    Approved("Approved", 0xFF1E8E3E), Spec("Spec", 0xFF1A73E8), Build("Build", 0xFF9334E6),
-    Archive("Archive", 0xFF80868B);
+enum class ColorTag(val label: String, val argb: Long, @StringRes val labelRes: Int) {
+    Urgent("Urgent", 0xFFD93025, R.string.tag_urgent),
+    Review("Review", 0xFFE8710A, R.string.tag_review),
+    WIP("WIP", 0xFFF9AB00, R.string.tag_wip),
+    Approved("Approved", 0xFF1E8E3E, R.string.tag_approved),
+    Spec("Spec", 0xFF1A73E8, R.string.tag_spec),
+    Build("Build", 0xFF9334E6, R.string.tag_build),
+    Archive("Archive", 0xFF80868B, R.string.tag_archive);
 
     companion object {
         fun fromName(n: String): ColorTag? = entries.firstOrNull { it.name.equals(n, ignoreCase = true) }
     }
 }
 
-enum class FileKind(val label: String) {
-    Folder("Folder"), Image("Image"), Video("Video"), Audio("Audio"), Pdf("PDF document"),
-    Document("Document"), Sheet("Spreadsheet"), Slides("Presentation"), Archive("Archive"),
-    Code("Source code"), Apk("Android app"), Text("Text file"), Other("File");
+enum class FileKind(val label: String, @StringRes val labelRes: Int) {
+    Folder("Folder", R.string.kind_folder),
+    Image("Image", R.string.kind_image),
+    Video("Video", R.string.kind_video),
+    Audio("Audio", R.string.kind_audio),
+    Pdf("PDF document", R.string.kind_pdf),
+    Document("Document", R.string.kind_document),
+    Sheet("Spreadsheet", R.string.kind_sheet),
+    Slides("Presentation", R.string.kind_slides),
+    Archive("Archive", R.string.kind_archive),
+    Code("Source code", R.string.kind_code),
+    Apk("Android app", R.string.kind_apk),
+    Text("Text file", R.string.kind_text),
+    Other("File", R.string.kind_other);
 
     companion object {
         private val map: Map<String, FileKind> = buildMap {

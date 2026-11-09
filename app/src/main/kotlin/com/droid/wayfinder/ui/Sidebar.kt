@@ -121,12 +121,14 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
             }
         }
     }
-    val phoneRows = remember(s.pairedPhone, s.quickAccessAvailable, s.tree, s.showHidden) {
+    val phoneDefaultName = stringResource(R.string.sidebar_phone)
+    val phoneCrossDeviceSub = stringResource(R.string.phone_subtitle_cross_device)
+    val phoneRows = remember(s.pairedPhone, s.quickAccessAvailable, s.tree, s.showHidden, phoneDefaultName, phoneCrossDeviceSub) {
         buildList {
             val phone = s.pairedPhone ?: if (s.quickAccessAvailable) {
                 com.droid.wayfinder.data.PairedPhone(
-                    name = "Phone",
-                    subtitle = "Cross-Device · Browse or import",
+                    name = phoneDefaultName,
+                    subtitle = phoneCrossDeviceSub,
                     path = FsPath.PHONE_ROOT,
                     isConnected = true,
                     authority = com.droid.wayfinder.data.PhoneDetector.QUICK_ACCESS_AUTHORITY,
@@ -196,7 +198,7 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
         item { SectionTitle(stringResource(R.string.pinned_section)) }; n++
         if (s.pins.isEmpty()) {
             item {
-                Text("Right-click a file or folder and choose “Pin to sidebar”", Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                Text(stringResource(R.string.sidebar_empty_pinned_hint), Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
             }
             n++
@@ -207,11 +209,12 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
                     FsPath.isLocalFile(p) && java.io.File(p).isFile
                 }
             }
+            val pinTitle = s.localizedTitleOf(p)
             SidebarItem(
-                label = s.titleOf(p), icon = pinIcon(p, isKnownFile = isLocalFile), depth = 0,
+                label = pinTitle, icon = pinIcon(p, isKnownFile = isLocalFile), depth = 0,
                 selected = p == activePath || (isLocalFile && p in s.active.selection),
                 dropPath = p.takeIf { !isLocalFile },
-                trailing = { HeaderAction(Icons.Filled.PushPin, "Unpin ${s.titleOf(p)}") { vm.unpin(p) } },
+                trailing = { HeaderAction(Icons.Filled.PushPin, stringResource(R.string.sidebar_unpin_target, pinTitle)) { vm.unpin(p) } },
                 onClick = { vm.openPinned(p) }, onMiddle = { vm.openPinned(p, newTab = true) },
                 onSecondary = { menu.show(it, sidebarMenu(vm, s, p, true)) },
             )
@@ -221,8 +224,8 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
         item {
             SectionTitle(stringResource(R.string.locations_section), trailing = {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    HeaderAction(Icons.Outlined.MyLocation, "Locate active folder (Alt+Shift+L)") { vm.locateInTree() }
-                    HeaderAction(Icons.Outlined.UnfoldLess, "Collapse folder tree") { vm.collapseTree() }
+                    HeaderAction(Icons.Outlined.MyLocation, stringResource(R.string.sidebar_locate_active_folder)) { vm.locateInTree() }
+                    HeaderAction(Icons.Outlined.UnfoldLess, stringResource(R.string.sidebar_collapse_tree)) { vm.collapseTree() }
                 }
             })
         }; n++
@@ -231,12 +234,12 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
         if (s.linuxProviderAuthority != null && s.linuxRootPath == null) {
             item(key = "linux_mount_prompt") {
                 SidebarItem(
-                    label = "Linux files",
+                    label = stringResource(R.string.sidebar_linux_files),
                     icon = Icons.Outlined.Dns,
                     depth = 0,
                     selected = false,
                     dropPath = null,
-                    subtitle = "Click to mount Linux folder",
+                    subtitle = stringResource(R.string.sidebar_linux_mount_subtitle),
                     onClick = { vm.requestMountLinuxFiles() },
                 )
             }
@@ -257,7 +260,7 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
                     depth = 0,
                     selected = false,
                     dropPath = null,
-                    subtitle = "Managed profile",
+                    subtitle = stringResource(R.string.sidebar_managed_profile_subtitle),
                     onClick = { vm.openWorkProfile(wp) },
                 )
             }
@@ -267,7 +270,7 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
         item { Divider() }
         item {
             SectionTitle(stringResource(R.string.google_drive_section), trailing = {
-                HeaderAction(Icons.Outlined.AddToDrive, "Mount Google Drive folder") {
+                HeaderAction(Icons.Outlined.AddToDrive, stringResource(R.string.sidebar_mount_drive_folder)) {
                     if (s.driveAccounts.isEmpty()) vm.requestGoogleAccountSignIn() else vm.requestMountSaf(s.driveAccounts.first().email)
                 }
             })
@@ -275,12 +278,12 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
         if (driveRows.isEmpty()) {
             item {
                 SidebarItem(
-                    label = "Sign in to Google Drive…",
+                    label = stringResource(R.string.sidebar_sign_in_drive),
                     icon = Icons.Outlined.Cloud,
                     depth = 0,
                     selected = false,
                     dropPath = null,
-                    subtitle = "Connect account or mount Drive folder",
+                    subtitle = stringResource(R.string.sidebar_sign_in_drive_subtitle),
                     iconComposable = { GoogleDriveIcon(Modifier.size(20.dp)) },
                     onClick = { vm.requestGoogleAccountSignIn() },
                 )
@@ -295,7 +298,7 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
         item {
             SectionTitle(stringResource(R.string.network_and_cloud_section), trailing = {
                 if (s.scanning) CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
-                else HeaderAction(Icons.Outlined.Refresh, "Rescan") { vm.navigate(FsPath.SMB_ROOT); vm.refresh() }
+                else HeaderAction(Icons.Outlined.Refresh, stringResource(R.string.action_rescan)) { vm.navigate(FsPath.SMB_ROOT); vm.refresh() }
             })
         }
         items(mountRows, key = { "mnt${it.depth}${it.path}" }) { r ->
@@ -303,10 +306,10 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
         }
         items(network, key = { "net${it.path}" }) { r -> TreeItem(vm, s, r, activePath, menu) }
         item {
-            SidebarItem("Connect to Server…", Icons.Outlined.Add, 0, false, null, null, onClick = { vm.showConnectDialog() })
+            SidebarItem(stringResource(R.string.sidebar_connect_to_server), Icons.Outlined.Add, 0, false, null, null, onClick = { vm.showConnectDialog() })
         }
         item {
-            SidebarItem("Mount Cloud / SAF…", Icons.Outlined.AddToDrive, 0, false, null, null, onClick = { vm.requestMountSaf() })
+            SidebarItem(stringResource(R.string.sidebar_mount_cloud_saf), Icons.Outlined.AddToDrive, 0, false, null, null, onClick = { vm.requestMountSaf() })
         }
         item { Divider() }
         item {
@@ -322,7 +325,7 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
             val path = FsPath.tagPath(t)
             val count = s.marks.tags.count { t in it.value }
             SidebarItem(
-                t.label, Icons.Filled.Circle, 0, activePath == path, path, tint = Color(t.argb),
+                stringResource(t.labelRes), Icons.Filled.Circle, 0, activePath == path, path, tint = Color(t.argb),
                 trailing = if (count > 0) ({ Text(count.toString(), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant) }) else null,
                 onClick = { vm.navigate(path) }, onMiddle = { vm.newTab(path, activate = false) },
                 onSecondary = { menu.show(it, sidebarMenu(vm, s, path, false)) },
@@ -344,6 +347,13 @@ private fun HeaderAction(icon: ImageVector, desc: String, onClick: () -> Unit) {
 private fun TreeItem(vm: BrowserViewModel, s: AppState, r: TreeRowData, activePath: String, menu: MenuController, mount: Mount? = null) {
     val driveAcc = r.driveAccount
     val phone = r.pairedPhone
+    val displayLabel = when {
+        r.depth > 0 -> r.label
+        driveAcc != null && r.label == "Drive" -> stringResource(R.string.sidebar_drive)
+        phone != null -> localizePhoneName(r.label)
+        else -> localizeRootLabel(r.label)
+    }
+    val displaySubtitle = localizeSubtitle(r.subtitle)
     val selected = when {
         driveAcc != null && !r.expanded ->
             (driveAcc.mountPath != null && (driveAcc.mountPath == activePath || FsPath.isWithin(driveAcc.mountPath, activePath))) ||
@@ -353,20 +363,25 @@ private fun TreeItem(vm: BrowserViewModel, s: AppState, r: TreeRowData, activePa
         else -> r.path == activePath
     }
     SidebarItem(
-        label = r.label, icon = r.icon, depth = r.depth, selected = selected,
+        label = displayLabel, icon = r.icon, depth = r.depth, selected = selected,
         dropPath = r.path.takeIf { !FsPath.isVirtual(it) && (!FsPath.isSmb(it) || FsPath.parseSmb(it).share != null) },
-        subtitle = r.subtitle,
+        subtitle = displaySubtitle,
         iconComposable = if (driveAcc != null) ({ GoogleDriveIcon(Modifier.size(20.dp)) }) else null,
         expandable = r.expandable, expanded = r.expanded, loading = r.loading, onToggle = { vm.toggleTree(r.path) },
         trailing = when {
             driveAcc != null && driveAcc.isMounted && mount != null -> ({
-                HeaderAction(Icons.Outlined.Eject, "Unmount ${driveAcc.email}") { vm.eject(mount) }
+                HeaderAction(Icons.Outlined.Eject, stringResource(R.string.sidebar_unmount_target, driveAcc.email)) { vm.eject(mount) }
             })
             phone != null && phone.isMounted && mount != null -> ({
-                HeaderAction(Icons.Outlined.Eject, "Unmount ${phone.name}") { vm.eject(mount) }
+                HeaderAction(Icons.Outlined.Eject, stringResource(R.string.sidebar_unmount_target, localizePhoneName(phone.name))) { vm.eject(mount) }
             })
-            mount != null -> ({ HeaderAction(Icons.Outlined.Eject, if (mount.saf) "Unmount ${mount.label}" else "Disconnect ${mount.label}") { vm.eject(mount) } })
-            r.path in s.pins -> ({ HeaderAction(Icons.Filled.PushPin, "Unpin ${r.label}") { vm.unpin(r.path) } })
+            mount != null -> ({
+                HeaderAction(
+                    Icons.Outlined.Eject,
+                    if (mount.saf) stringResource(R.string.sidebar_unmount_target, mount.label) else stringResource(R.string.sidebar_disconnect_target, mount.label),
+                ) { vm.eject(mount) }
+            })
+            r.path in s.pins -> ({ HeaderAction(Icons.Filled.PushPin, stringResource(R.string.sidebar_unpin_target, displayLabel)) { vm.unpin(r.path) } })
             else -> null
         },
         onClick = {
@@ -438,6 +453,9 @@ private fun SidebarItem(
         else -> Color.Transparent
     }
     val itemHeight = if (subtitle != null) 44.dp else 36.dp
+    val openLabel = stringResource(R.string.sidebar_open_target, label)
+    val toggleLabel = if (expanded) stringResource(R.string.sidebar_collapse_target, label) else stringResource(R.string.sidebar_expand_target, label)
+    val chevronDesc = if (expanded) stringResource(R.string.sidebar_collapse) else stringResource(R.string.sidebar_expand)
     Row(
         Modifier.fillMaxWidth().heightIn(min = itemHeight).clip(RoundedCornerShape(18.dp)).background(bg).hoverable(hover)
             .dropTarget(dropPath)
@@ -445,7 +463,7 @@ private fun SidebarItem(
                 label + depth + dropPath + subtitle.orEmpty(),
                 role = Role.Button,
                 selected = selected,
-                onClickLabel = "Open $label",
+                onClickLabel = openLabel,
                 onClick = { _, _, _ -> onClick() }, onMiddle = onMiddle,
                 onSecondary = onSecondary, onLongPress = onSecondary,
             )
@@ -458,7 +476,7 @@ private fun SidebarItem(
                     Modifier.mouseGestures(
                         "toggle$label$depth",
                         role = Role.Button,
-                        onClickLabel = if (expanded) "Collapse $label" else "Expand $label",
+                        onClickLabel = toggleLabel,
                         onClick = { _, _, _ -> onToggle() },
                     )
                 } else Modifier,
@@ -468,7 +486,7 @@ private fun SidebarItem(
             when {
                 loading -> CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp)
                 expandable -> Icon(
-                    if (expanded) Icons.Outlined.ExpandMore else Icons.Outlined.ChevronRight, if (expanded) "Collapse" else "Expand",
+                    if (expanded) Icons.Outlined.ExpandMore else Icons.Outlined.ChevronRight, chevronDesc,
                     Modifier.size(18.dp), tint = cs.onSurfaceVariant,
                 )
             }

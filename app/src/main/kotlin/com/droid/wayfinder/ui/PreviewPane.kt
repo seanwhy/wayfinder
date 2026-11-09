@@ -79,22 +79,22 @@ fun PreviewPane(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.details_pane_title), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
-                IconButton({ vm.togglePreview() }, Modifier.minimumInteractiveComponentSize().sizeIn(minWidth = 40.dp, minHeight = 40.dp)) { Icon(Icons.Outlined.Close, "Close details (Alt+P)", Modifier.size(18.dp)) }
+                IconButton({ vm.togglePreview() }, Modifier.minimumInteractiveComponentSize().sizeIn(minWidth = 40.dp, minHeight = 40.dp)) { Icon(Icons.Outlined.Close, stringResource(R.string.preview_close), Modifier.size(18.dp)) }
             }
             when (sel.size) {
                 0 -> {
-                    Preview(null, FsPath.name(tab.path).ifEmpty { "/" }, "Folder")
-                    Fact("Items", tab.entries.size.toString())
-                    Fact("Location", s.titleOf(tab.path))
+                    Preview(null, FsPath.name(tab.path).ifEmpty { "/" }, stringResource(R.string.kind_folder))
+                    Fact(stringResource(R.string.col_items), tab.entries.size.toString())
+                    Fact(stringResource(R.string.preview_location), s.localizedTitleOf(tab.path))
                 }
                 1 -> {
                     val e = sel[0]
-                    Preview(null, e.name, e.kind.label, e, vm)
-                    Fact("Type", e.typeLabel)
-                    e.subtitle?.takeIf { it.isNotBlank() }?.let { Fact("Summary", it) }
-                    if (!e.isDir) Fact("Size", formatSize(e.size))
-                    Fact("Modified", formatDateFull(e.modified))
-                    Fact("Location", s.displayPath(FsPath.parent(e.path) ?: e.path, " / "))
+                    Preview(null, e.name, stringResource(e.kind.labelRes), e, vm)
+                    Fact(stringResource(R.string.col_type), e.localizedTypeLabel())
+                    e.subtitle?.takeIf { it.isNotBlank() }?.let { Fact(stringResource(R.string.preview_summary), localizeSubtitle(it)) }
+                    if (!e.isDir) Fact(stringResource(R.string.col_size), formatSize(e.size))
+                    Fact(stringResource(R.string.preview_modified), formatDateFull(e.modified))
+                    Fact(stringResource(R.string.preview_location), s.localizedDisplayPath(FsPath.parent(e.path) ?: e.path, " / "))
                     if (FsPath.isLocalFile(e.path)) PosixFact(e)
                     if (!e.isServer && !e.isShare) MarksEditor(vm, s, e)
                     val btnPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
@@ -103,23 +103,23 @@ fun PreviewPane(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        FilledTonalButton({ vm.openSelection() }, contentPadding = btnPadding) { Text("Open", maxLines = 1, softWrap = false) }
-                        if (FsPath.isLocalFile(e.path) && !e.isDir) FilledTonalButton({ vm.share() }, contentPadding = btnPadding) { Text("Share", maxLines = 1, softWrap = false) }
+                        FilledTonalButton({ vm.openSelection() }, contentPadding = btnPadding) { Text(stringResource(R.string.action_open), maxLines = 1, softWrap = false) }
+                        if (FsPath.isLocalFile(e.path) && !e.isDir) FilledTonalButton({ vm.share() }, contentPadding = btnPadding) { Text(stringResource(R.string.action_share), maxLines = 1, softWrap = false) }
                         if (!e.isServer && !e.isShare && !FsPath.isZip(e.path) && !FsPath.isVirtual(e.path)) {
                             val pinned = e.path in s.pins
                             FilledTonalButton({ vm.togglePin(e.path) }, contentPadding = btnPadding) {
-                                Text(if (pinned) "Unpin" else "Pin", maxLines = 1, softWrap = false)
+                                Text(stringResource(if (pinned) R.string.preview_unpin else R.string.preview_pin), maxLines = 1, softWrap = false)
                             }
                         }
-                        if (!e.isServer && !e.isShare && !FsPath.isZip(e.path)) FilledTonalButton({ vm.requestRename() }, contentPadding = btnPadding) { Text("Rename", maxLines = 1, softWrap = false) }
+                        if (!e.isServer && !e.isShare && !FsPath.isZip(e.path)) FilledTonalButton({ vm.requestRename() }, contentPadding = btnPadding) { Text(stringResource(R.string.action_rename), maxLines = 1, softWrap = false) }
                     }
                     if (!e.isDir && FsPath.isLocalFile(e.path) && (e.kind == FileKind.Text || e.kind == FileKind.Code)) TextSnippet(e)
                 }
                 else -> {
-                    Preview(null, icuStringResource(R.string.selected_count_plural, sel.size), "Multiple")
-                    Fact("Total size", formatSize(sel.filter { !it.isDir }.sumOf { it.size }))
-                    Fact("Folders", sel.count { it.isDir }.toString())
-                    Fact("Files", sel.count { !it.isDir }.toString())
+                    Preview(null, icuStringResource(R.string.selected_count_plural, sel.size), stringResource(R.string.preview_multiple))
+                    Fact(stringResource(R.string.preview_total_size), formatSize(sel.filter { !it.isDir }.sumOf { it.size }))
+                    Fact(stringResource(R.string.preview_folders), sel.count { it.isDir }.toString())
+                    Fact(stringResource(R.string.preview_files), sel.count { !it.isDir }.toString())
                 }
             }
         }
@@ -162,7 +162,7 @@ private fun PosixFact(e: FileEntry) {
     val info by produceState<com.droid.wayfinder.data.PosixInfo?>(null, e.path, e.modified) {
         value = withContext(Dispatchers.IO) { FileInfo.lstat(e.path) }
     }
-    info?.let { p -> Fact("Mode", "${FileInfo.posixString(p.mode)} (${FileInfo.octal(p.mode)})\nuid ${p.uid} / gid ${p.gid}", mono = true) }
+    info?.let { p -> Fact(stringResource(R.string.preview_mode), "${FileInfo.posixString(p.mode)} (${FileInfo.octal(p.mode)})\nuid ${p.uid} / gid ${p.gid}", mono = true) }
 }
 
 /** Star, pin, and color-tag chips for one item. */
@@ -173,9 +173,10 @@ private fun MarksEditor(vm: BrowserViewModel, s: AppState, e: FileEntry) {
     val pinned = e.path in s.pins
     val tags = s.marks.tagsOf(e.path)
     Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("Tags", Modifier.widthIn(min = 84.dp).padding(end = 8.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+        Text(stringResource(R.string.col_tags), Modifier.widthIn(min = 84.dp).padding(end = 8.dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             if (!FsPath.isVirtual(e.path) && !FsPath.isZip(e.path)) {
+                val pinLabel = stringResource(if (pinned) R.string.action_unpin_from_sidebar else R.string.action_pin_to_sidebar)
                 Box(
                     Modifier.sizeIn(minWidth = 32.dp, minHeight = 32.dp)
                         .semantics {
@@ -183,17 +184,18 @@ private fun MarksEditor(vm: BrowserViewModel, s: AppState, e: FileEntry) {
                             this.selected = pinned
                         }
                         .clip(CircleShape)
-                        .clickable(onClickLabel = if (pinned) "Unpin from sidebar" else "Pin to sidebar") { vm.togglePin(e.path) },
+                        .clickable(onClickLabel = pinLabel) { vm.togglePin(e.path) },
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         if (pinned) androidx.compose.material.icons.Icons.Filled.PushPin else androidx.compose.material.icons.Icons.Outlined.PushPin,
-                        if (pinned) "Unpin from sidebar" else "Pin to sidebar",
+                        pinLabel,
                         Modifier.size(20.dp),
                         tint = if (pinned) cs.primary else cs.onSurfaceVariant,
                     )
                 }
             }
+            val starLabel = stringResource(if (starred) R.string.action_remove_from_starred else R.string.action_add_to_starred)
             Box(
                 Modifier.sizeIn(minWidth = 32.dp, minHeight = 32.dp)
                     .semantics {
@@ -201,32 +203,35 @@ private fun MarksEditor(vm: BrowserViewModel, s: AppState, e: FileEntry) {
                         this.selected = starred
                     }
                     .clip(CircleShape)
-                    .clickable(onClickLabel = if (starred) "Remove from Starred" else "Add to Starred") { vm.toggleStar(listOf(e.path)) },
+                    .clickable(onClickLabel = starLabel) { vm.toggleStar(listOf(e.path)) },
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(if (starred) Icons.Filled.Star else Icons.Outlined.StarOutline, if (starred) "Remove from Starred" else "Add to Starred",
+                Icon(if (starred) Icons.Filled.Star else Icons.Outlined.StarOutline, starLabel,
                     Modifier.size(20.dp), tint = if (starred) StarColor else cs.onSurfaceVariant)
             }
             ColorTag.entries.forEach { t ->
                 val on = t in tags
+                val tagName = stringResource(t.labelRes)
+                val tagCd = stringResource(R.string.preview_tag_cd, tagName)
+                val tagClick = stringResource(if (on) R.string.preview_remove_tag else R.string.preview_add_tag, tagName)
                 Box(
                     Modifier.sizeIn(minWidth = 32.dp, minHeight = 32.dp)
                         .semantics {
                             role = Role.Checkbox
                             this.selected = on
-                            contentDescription = "Tag ${t.label}"
+                            contentDescription = tagCd
                         }
                         .clip(CircleShape)
                         .background(Color(t.argb).copy(alpha = if (on) 1f else 0.25f))
                         .then(if (on) Modifier.border(2.dp, cs.onSurface.copy(alpha = 0.5f), CircleShape) else Modifier)
-                        .clickable(onClickLabel = if (on) "Remove ${t.label} tag" else "Add ${t.label} tag") { vm.toggleTag(t, listOf(e.path)) },
+                        .clickable(onClickLabel = tagClick) { vm.toggleTag(t, listOf(e.path)) },
                     contentAlignment = Alignment.Center,
-                ) { if (on) Icon(Icons.Filled.Check, t.label, Modifier.size(14.dp), tint = Color.White) }
+                ) { if (on) Icon(Icons.Filled.Check, tagName, Modifier.size(14.dp), tint = Color.White) }
             }
         }
     }
     if (tags.isNotEmpty()) Text(
-        tags.sortedBy { it.ordinal }.joinToString(" • ") { it.label }, Modifier.padding(start = 84.dp, top = 4.dp),
+        tags.sortedBy { it.ordinal }.map { stringResource(it.labelRes) }.joinToString(" • "), Modifier.padding(start = 84.dp, top = 4.dp),
         style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
     )
 }
@@ -247,7 +252,7 @@ private fun TextSnippet(e: FileEntry) {
         }
     }
     val t = text?.takeIf { it.isNotBlank() } ?: return
-    Text("Preview", Modifier.padding(top = 16.dp, bottom = 4.dp), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
+    Text(stringResource(R.string.preview_text_heading), Modifier.padding(top = 16.dp, bottom = 4.dp), style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant)
     Surface(shape = RoundedCornerShape(10.dp), color = cs.surfaceContainerLow) {
         Text(t, Modifier.fillMaxWidth().padding(10.dp), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, maxLines = 14)
     }

@@ -63,6 +63,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -114,7 +115,7 @@ fun QuickLook(vm: BrowserViewModel, s: AppState) {
                     contentAlignment = Alignment.Center,
                 ) { Body(vm, entry) }
                 Text(
-                    "Space or Esc to close  ·  ← → ↑ ↓ previous / next  ·  Enter to open",
+                    stringResource(R.string.quicklook_footer_hint),
                     Modifier.fillMaxWidth().padding(12.dp),
                     style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -131,19 +132,20 @@ private fun Header(vm: BrowserViewModel, e: FileEntry) {
         Icon(e.icon(), null, Modifier.size(28.dp), tint = e.tint())
         Column(Modifier.weight(1f).padding(start = 12.dp)) {
             Text(e.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            val typeLabel = e.localizedTypeLabel()
             val facts = buildList {
-                add(e.typeLabel)
+                add(typeLabel)
                 if (!e.isDir) add(formatSize(e.size))
                 if (e.modified > 0) add(formatDateFull(e.modified))
             }
             Text(facts.joinToString("  ·  "), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, maxLines = 1)
         }
-        IconButton({ vm.quickLookMove(-1) }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Previous (←)") }
-        IconButton({ vm.quickLookMove(1) }) { Icon(Icons.AutoMirrored.Outlined.ArrowForward, "Next (→)") }
+        IconButton({ vm.quickLookMove(-1) }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.quicklook_previous)) }
+        IconButton({ vm.quickLookMove(1) }) { Icon(Icons.AutoMirrored.Outlined.ArrowForward, stringResource(R.string.quicklook_next)) }
         FilledTonalButton({ vm.closeQuickLook(); vm.openSelection() }, Modifier.padding(horizontal = 8.dp)) {
-            Text(if (e.isDir) "Open folder" else "Open")
+            Text(stringResource(if (e.isDir) R.string.quicklook_open_folder else R.string.action_open))
         }
-        IconButton({ vm.closeQuickLook() }) { Icon(Icons.Outlined.Close, "Close (Space)") }
+        IconButton({ vm.closeQuickLook() }) { Icon(Icons.Outlined.Close, stringResource(R.string.quicklook_close)) }
     }
 }
 
@@ -152,7 +154,7 @@ private fun Body(vm: BrowserViewModel, e: FileEntry) {
     if (e.isDir && !e.isServer) { FolderPreview(vm, e); return }
     if (!FsPath.isLocalFile(e.path)) {
         if (vm.canThumbnail(e)) { RemoteMediaPreview(vm, e); return }
-        Placeholder(e, if (FsPath.isZip(e.path)) "Preview isn't available inside archives. Press Enter to open." else "Preview isn't available for network and cloud files yet. Press Enter to open.")
+        Placeholder(e, stringResource(if (FsPath.isZip(e.path)) R.string.quicklook_no_archive_preview else R.string.quicklook_no_remote_preview))
         return
     }
     val ext = e.extension.lowercase()
@@ -175,10 +177,10 @@ private fun FolderPreview(vm: BrowserViewModel, e: FileEntry) {
     val k = kids
     when {
         k == null -> CircularProgressIndicator()
-        k.isEmpty() -> Placeholder(e, androidx.compose.ui.res.stringResource(R.string.quicklook_empty_folder))
+        k.isEmpty() -> Placeholder(e, stringResource(R.string.quicklook_empty_folder))
         else -> Column(Modifier.fillMaxSize()) {
             Text(
-                androidx.compose.ui.res.stringResource(
+                stringResource(
                     R.string.quicklook_folder_summary,
                     icuStringResource(R.string.item_count_plural, k.size),
                     icuStringResource(R.string.folder_count_plural, k.count { it.isDir }),
@@ -208,10 +210,10 @@ private fun ZipPreview(e: FileEntry) {
         }
     }
     val r = listing ?: run { CircularProgressIndicator(); return }
-    val l = r.getOrNull() ?: run { BinaryPreview(e, "Couldn't read this archive: ${r.exceptionOrNull()?.message}"); return }
+    val l = r.getOrNull() ?: run { BinaryPreview(e, stringResource(R.string.quicklook_archive_cannot_read, r.exceptionOrNull()?.message ?: "")); return }
     Column(Modifier.fillMaxSize()) {
         Text(
-            androidx.compose.ui.res.stringResource(
+            stringResource(
                 R.string.quicklook_archive_summary,
                 icuStringResource(R.string.archive_entry_count_plural, l.total),
                 formatSize(l.bytes),
@@ -239,7 +241,7 @@ private fun ListingRow(icon: androidx.compose.ui.graphics.vector.ImageVector, ti
 
 /** Unknown/binary files: size plus SHA-256 and CRC32 computed in the background. */
 @Composable
-private fun BinaryPreview(e: FileEntry, message: String = "No preview available for this file type.") {
+private fun BinaryPreview(e: FileEntry, message: String = stringResource(R.string.quicklook_no_file_preview)) {
     val cs = MaterialTheme.colorScheme
     var done by remember(e.path) { mutableStateOf(0L) }
     val sums by produceState<Result<Checksums>?>(null, e.path) {
@@ -252,10 +254,10 @@ private fun BinaryPreview(e: FileEntry, message: String = "No preview available 
         val r = sums
         when {
             r == null -> Text(
-                "Computing SHA-256 & CRC32…" + if (e.size > 0) " ${(done * 100 / e.size).coerceIn(0, 100)}%" else "",
+                stringResource(R.string.quicklook_computing_checksums) + if (e.size > 0) " ${(done * 100 / e.size).coerceIn(0, 100)}%" else "",
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant,
             )
-            r.isFailure -> Text("Couldn't read file: ${r.exceptionOrNull()?.message}", style = MaterialTheme.typography.bodySmall, color = cs.error)
+            r.isFailure -> Text(stringResource(R.string.quicklook_cannot_read_file, r.exceptionOrNull()?.message ?: ""), style = MaterialTheme.typography.bodySmall, color = cs.error)
             else -> SelectionContainer {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("SHA-256  ${r.getOrThrow().sha256}", style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
@@ -287,7 +289,7 @@ private fun RemoteMediaPreview(vm: BrowserViewModel, e: FileEntry) {
         )
         if (e.kind == FileKind.Video) {
             FilledTonalIconButton({ vm.closeQuickLook(); vm.openSelection() }, Modifier.size(72.dp), shape = CircleShape) {
-                Icon(Icons.Outlined.PlayArrow, "Play", Modifier.size(40.dp))
+                Icon(Icons.Outlined.PlayArrow, stringResource(R.string.quicklook_play), Modifier.size(40.dp))
             }
         }
     }
@@ -311,7 +313,7 @@ private fun VideoPreview(vm: BrowserViewModel, e: FileEntry) {
             e.name, Modifier.fillMaxSize().padding(8.dp), contentScale = ContentScale.Fit,
         )
         FilledTonalIconButton({ vm.closeQuickLook(); vm.openSelection() }, Modifier.size(72.dp), shape = CircleShape) {
-            Icon(Icons.Outlined.PlayArrow, "Play", Modifier.size(40.dp))
+            Icon(Icons.Outlined.PlayArrow, stringResource(R.string.quicklook_play), Modifier.size(40.dp))
         }
     }
 }
@@ -342,7 +344,7 @@ private fun PdfPreview(e: FileEntry) {
     }
     when {
         pages == null -> CircularProgressIndicator()
-        pages!!.isEmpty() -> Placeholder(e, "Couldn't render this PDF.")
+        pages!!.isEmpty() -> Placeholder(e, stringResource(R.string.quicklook_pdf_cannot_render))
         else -> LazyColumn(
             Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -357,7 +359,9 @@ private fun PdfPreview(e: FileEntry) {
 
 @Composable
 private fun TextPreview(e: FileEntry) {
-    val text by produceState<String?>(null, e.path) {
+    val truncatedMsg = stringResource(R.string.quicklook_preview_truncated)
+    val ctx = LocalContext.current
+    val text by produceState<String?>(null, e.path, truncatedMsg) {
         value = withContext(Dispatchers.IO) {
             runCatching {
                 File(e.path).inputStream().use { input ->
@@ -365,9 +369,9 @@ private fun TextPreview(e: FileEntry) {
                     var n = 0
                     while (n < buf.size) { val r = input.read(buf, n, buf.size - n); if (r < 0) break; n += r }
                     val s = String(buf, 0, n, Charsets.UTF_8)
-                    if (e.size > TEXT_PREVIEW_BYTES) "$s\n\n… (preview truncated)" else s
+                    if (e.size > TEXT_PREVIEW_BYTES) "$s\n\n$truncatedMsg" else s
                 }
-            }.getOrElse { "Couldn't read file: ${it.message}" }
+            }.getOrElse { ctx.getString(R.string.quicklook_cannot_read_file, it.message ?: "") }
         }
     }
     val t = text
@@ -422,12 +426,12 @@ private fun AudioPreview(e: FileEntry) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Icon(e.icon(), null, Modifier.size(120.dp), tint = e.tint())
         when {
-            failed -> Text("Can't play this audio file.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            failed -> Text(stringResource(R.string.quicklook_cannot_play_audio), color = MaterialTheme.colorScheme.onSurfaceVariant)
             !ready -> CircularProgressIndicator()
             else -> FilledTonalIconButton(
                 { if (playing) player.pause() else player.start(); playing = !playing },
                 Modifier.size(64.dp), shape = CircleShape,
-            ) { Icon(if (playing) Icons.Outlined.Pause else Icons.Outlined.PlayArrow, if (playing) "Pause" else "Play", Modifier.size(36.dp)) }
+            ) { Icon(if (playing) Icons.Outlined.Pause else Icons.Outlined.PlayArrow, stringResource(if (playing) R.string.quicklook_pause else R.string.quicklook_play), Modifier.size(36.dp)) }
         }
     }
 }

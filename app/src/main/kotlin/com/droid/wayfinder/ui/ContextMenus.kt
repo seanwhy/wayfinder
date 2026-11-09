@@ -69,6 +69,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -123,7 +124,7 @@ fun MenuHost(menu: MenuController) {
                         text = { Text(e.label) },
                         leadingIcon = e.icon?.let { { Icon(it, null, Modifier.size(20.dp), tint = e.tint ?: androidx.compose.material3.LocalContentColor.current) } },
                         trailingIcon = when {
-                            e.checked -> ({ Icon(Icons.Filled.Check, "On", Modifier.size(18.dp)) })
+                            e.checked -> ({ Icon(Icons.Filled.Check, stringResource(R.string.menu_checked_on), Modifier.size(18.dp)) })
                             e.submenu != null -> ({ Text("›", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) })
                             e.shortcut != null -> ({ Text(e.shortcut, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) })
                             else -> null
@@ -158,7 +159,7 @@ fun tagsItem(vm: BrowserViewModel, s: AppState, paths: List<String>, back: (() -
         buildList {
             if (back != null) add(MenuEntry.Item(vm.str(R.string.action_back), Icons.AutoMirrored.Outlined.ArrowBack, submenu = back) {})
             ColorTag.entries.forEach { t ->
-                add(MenuEntry.Item(t.label, Icons.Filled.Circle, tint = Color(t.argb), checked = paths.all { t in s.marks.tagsOf(it) }) { vm.toggleTag(t, paths) })
+                add(MenuEntry.Item(vm.str(t.labelRes), Icons.Filled.Circle, tint = Color(t.argb), checked = paths.all { t in s.marks.tagsOf(it) }) { vm.toggleTag(t, paths) })
             }
         }
     }) {}
@@ -275,12 +276,12 @@ fun backgroundMenu(vm: BrowserViewModel, s: AppState): List<MenuEntry> {
 
 fun sidebarMenu(vm: BrowserViewModel, s: AppState, path: String, pinned: Boolean): List<MenuEntry> = buildList {
     val isLocalFile = FsPath.isLocalFile(path) && java.io.File(path).isFile
-    add(item("Open", if (isLocalFile) Icons.AutoMirrored.Outlined.OpenInNew else Icons.Outlined.FolderOpen) { if (pinned) vm.openPinned(path) else vm.navigate(path) })
+    add(item(vm.str(R.string.action_open), if (isLocalFile) Icons.AutoMirrored.Outlined.OpenInNew else Icons.Outlined.FolderOpen) { if (pinned) vm.openPinned(path) else vm.navigate(path) })
     if (isLocalFile) {
-        add(item("Show in enclosing folder", Icons.Outlined.FindInPage) { vm.showInEnclosingFolder(path) })
+        add(item(vm.str(R.string.action_show_in_enclosing_folder), Icons.Outlined.FindInPage) { vm.showInEnclosingFolder(path) })
     } else {
-        add(item("Open in new tab", Icons.Outlined.Tab) { if (pinned) vm.openPinned(path, newTab = true) else vm.newTab(path, activate = true) })
-        add(item("Open in new window", Icons.Outlined.Web) { vm.newWindow(path) })
+        add(item(vm.str(R.string.action_open_in_new_tab), Icons.Outlined.Tab) { if (pinned) vm.openPinned(path, newTab = true) else vm.newTab(path, activate = true) })
+        add(item(vm.str(R.string.action_open_in_new_window), Icons.Outlined.Web) { vm.newWindow(path) })
     }
     if (!FsPath.isVirtual(path) && !FsPath.isZip(path)) {
         if (pinned) {

@@ -544,8 +544,8 @@ private fun showPermsCol(s: AppState, effectiveWidth: Dp) = s.permsColumn && eff
 
 /** Right-click menu of the Details header: toggles the optional columns. */
 fun columnsMenu(vm: BrowserViewModel, s: AppState): List<MenuEntry> = listOf(
-    MenuEntry.Item("Tags column", Icons.AutoMirrored.Outlined.Label, checked = s.tagsColumn) { vm.toggleTagsColumn() },
-    MenuEntry.Item("Permissions column", Icons.Outlined.Lock, checked = s.permsColumn) { vm.togglePermsColumn() },
+    MenuEntry.Item(vm.str(R.string.overflow_tags_column), Icons.AutoMirrored.Outlined.Label, checked = s.tagsColumn) { vm.toggleTagsColumn() },
+    MenuEntry.Item(vm.str(R.string.overflow_perms_column), Icons.Outlined.Lock, checked = s.permsColumn) { vm.togglePermsColumn() },
 )
 
 @Composable
@@ -572,25 +572,27 @@ private fun DetailsHeader(vm: BrowserViewModel, s: AppState, tab: TabState, widt
         ) {
             @Composable
             fun cell(label: String, key: SortKey, mod: Modifier, end: Boolean = false) {
+                val sortByLabel = stringResource(R.string.sort_by_column, label)
+                val sortDirDesc = if (tab.sortAsc) stringResource(R.string.sorted_ascending) else stringResource(R.string.sorted_descending)
                 Row(
-                    mod.fillMaxHeightCompat().clickable(role = Role.Button, onClickLabel = "Sort by $label") { vm.setSort(key) },
+                    mod.fillMaxHeightCompat().clickable(role = Role.Button, onClickLabel = sortByLabel) { vm.setSort(key) },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = if (end) Arrangement.End else Arrangement.Start,
                 ) {
                     Text(label, style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (tab.sortKey == key) Icon(
                         if (tab.sortAsc) Icons.Outlined.ArrowUpward else Icons.Outlined.ArrowDownward,
-                        if (tab.sortAsc) "Sorted ascending" else "Sorted descending", Modifier.padding(start = 4.dp).size(14.dp), tint = cs.onSurfaceVariant,
+                        sortDirDesc, Modifier.padding(start = 4.dp).size(14.dp), tint = cs.onSurfaceVariant,
                     )
                 }
             }
             Box(Modifier.width(34.dp))
-            cell("Name", SortKey.Name, Modifier.weight(1f))
-            if (showTagsCol(s, effectiveWidth)) cell("Tags", SortKey.Tags, Modifier.width((TAGS_W * fontScale).dp))
-            if (showPermsCol(s, effectiveWidth)) cell("Permissions", SortKey.Permissions, Modifier.width((PERMS_W * fontScale).dp))
-            if (effectiveWidth > 520.dp) cell("Date modified", SortKey.Modified, Modifier.width((DATE_W * fontScale).dp))
-            if (effectiveWidth > 760.dp) cell("Type", SortKey.Type, Modifier.width((TYPE_W * fontScale).dp))
-            cell("Size", SortKey.Size, Modifier.width((SIZE_W * fontScale).dp), end = true)
+            cell(stringResource(R.string.col_name), SortKey.Name, Modifier.weight(1f))
+            if (showTagsCol(s, effectiveWidth)) cell(stringResource(R.string.col_tags), SortKey.Tags, Modifier.width((TAGS_W * fontScale).dp))
+            if (showPermsCol(s, effectiveWidth)) cell(stringResource(R.string.col_permissions), SortKey.Permissions, Modifier.width((PERMS_W * fontScale).dp))
+            if (effectiveWidth > 520.dp) cell(stringResource(R.string.col_date_modified), SortKey.Modified, Modifier.width((DATE_W * fontScale).dp))
+            if (effectiveWidth > 760.dp) cell(stringResource(R.string.col_type), SortKey.Type, Modifier.width((TYPE_W * fontScale).dp))
+            cell(stringResource(R.string.col_size), SortKey.Size, Modifier.width((SIZE_W * fontScale).dp), end = true)
         }
         HorizontalDivider(color = cs.outlineVariant.copy(alpha = 0.6f))
     }
@@ -603,6 +605,7 @@ private fun Modifier.fillMaxHeightCompat(): Modifier = this.heightIn(min = 28.dp
 private fun Modifier.entryInteractions(vm: BrowserViewModel, tab: TabState, e: FileEntry, rb: RubberBandState): Modifier {
     val menu = LocalMenu.current
     val selected = e.path in tab.selection
+    val openLabel = stringResource(R.string.sidebar_open_target, e.name)
     DisposableEffect(e.path) { onDispose { rb.itemBounds.remove(e.path) } }
     val dropPath = if (e.isDir && !selected && !e.isServer) e.path else null
     return this
@@ -617,7 +620,7 @@ private fun Modifier.entryInteractions(vm: BrowserViewModel, tab: TabState, e: F
             e.path,
             role = Role.Button,
             selected = selected,
-            onClickLabel = "Open ${e.name}",
+            onClickLabel = openLabel,
             onClick = { ctrl, shift, touch ->
                 if (touch) {
                     if (vm.state.value.active.selection.isNotEmpty()) vm.click(e.path, ctrl = true, shift = false) else vm.open(e)
@@ -668,7 +671,7 @@ private fun EntryRow(vm: BrowserViewModel, s: AppState, tab: TabState, e: FileEn
                 Text(e.name, Modifier.weight(1f, fill = false), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (selected) cs.onSecondaryContainer else cs.onSurface)
                 MarkBadges(s, e.path, Modifier.padding(start = 8.dp), showTags = !tagsCol)
             }
-            val sub = e.subtitle ?: if (tab.searchResults != null || (FsPath.isCollection(tab.path) && tab.path != FsPath.RECENTS_ROOT)) FsPath.parent(e.path) else null
+            val sub = localizeSubtitle(e.subtitle) ?: if (tab.searchResults != null || (FsPath.isCollection(tab.path) && tab.path != FsPath.RECENTS_ROOT)) FsPath.parent(e.path) else null
             if (sub != null) Text(sub, style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         if (details) {
@@ -678,7 +681,7 @@ private fun EntryRow(vm: BrowserViewModel, s: AppState, tab: TabState, e: FileEn
                 style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = cs.onSurfaceVariant, maxLines = 1,
             )
             if (effectiveWidth > 520.dp) Text(formatDate(e.modified), Modifier.width((DATE_W * fontScale).dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (effectiveWidth > 760.dp) Text(e.typeLabel, Modifier.width((TYPE_W * fontScale).dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (effectiveWidth > 760.dp) Text(e.localizedTypeLabel(), Modifier.width((TYPE_W * fontScale).dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(if (e.isDir) "—" else formatSize(e.size), Modifier.width((SIZE_W * fontScale).dp), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, maxLines = 1, textAlign = TextAlign.End)
         }
     }
@@ -747,7 +750,7 @@ private fun StatusBar(vm: BrowserViewModel, s: AppState) {
         val op = s.ops.firstOrNull()
         if (op == null && sel.isEmpty() && roomForHint) {
             Text(
-                "Space: Quick Look • F3: Split view • Ctrl+K: Commands • F1: Shortcuts",
+                stringResource(R.string.status_shortcut_hints),
                 style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant.copy(alpha = 0.75f), maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
         }
@@ -763,7 +766,7 @@ private fun StatusBar(vm: BrowserViewModel, s: AppState) {
             )
             if (f != null) LinearProgressIndicator({ f }, Modifier.width(120.dp)) else LinearProgressIndicator(Modifier.width(120.dp))
             Text(if (f != null) "  ${(f * 100).toInt()}%" else "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(44.dp))
-            IconButton({ vm.cancelOp(op.id) }, Modifier.size(28.dp)) { Icon(Icons.Outlined.Close, "Cancel", Modifier.size(16.dp)) }
+            IconButton({ vm.cancelOp(op.id) }, Modifier.size(28.dp)) { Icon(Icons.Outlined.Close, stringResource(R.string.action_cancel), Modifier.size(16.dp)) }
         }
     }
     }
@@ -852,7 +855,7 @@ private fun CurrentColumn(vm: BrowserViewModel, s: AppState, tab: TabState, entr
     ) {
         when {
             tab.loading && tab.entries.isEmpty() -> CircularProgressIndicator(Modifier.align(Alignment.Center).size(28.dp))
-            entries.isEmpty() -> Text("Empty folder", Modifier.align(Alignment.Center), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
+            entries.isEmpty() -> Text(stringResource(R.string.miller_empty_folder), Modifier.align(Alignment.Center), style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant)
             else -> LazyColumn(Modifier.fillMaxSize(), state, contentPadding = PaddingValues(vertical = 4.dp)) {
                 items(entries, key = { it.path }) { e ->
                     val selected = e.path in tab.selection
@@ -942,7 +945,7 @@ private fun MillerPreview(vm: BrowserViewModel, e: FileEntry) {
             EntryThumbnail(vm, e, sizePx = 560, iconSize = 64.dp, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
         }
         Text(e.name, Modifier.padding(top = 12.dp), style = MaterialTheme.typography.titleSmall, textAlign = TextAlign.Center, maxLines = 3, overflow = TextOverflow.Ellipsis)
-        Text("${e.typeLabel} • ${formatSize(e.size)}", Modifier.padding(top = 4.dp), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
-        Text("Modified ${formatDate(e.modified)}", style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+        Text("${e.localizedTypeLabel()} • ${formatSize(e.size)}", Modifier.padding(top = 4.dp), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
+        Text(stringResource(R.string.miller_modified_date, formatDate(e.modified)), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
     }
 }

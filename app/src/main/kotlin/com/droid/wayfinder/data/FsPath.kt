@@ -210,7 +210,7 @@ object FsPath {
     /** Ancestors from root to [p] inclusive, restricted to those at or below [root] (for local paths). */
     fun breadcrumbs(p: String, rootLabels: Map<String, String>): List<Pair<String, String>> {
         val n = normalize(p)
-        if (isVirtual(n)) return listOf(name(n) to n)
+        if (isVirtual(n)) return listOf((rootLabels[n] ?: name(n)) to n)
         if (isPhone(n)) {
             val out = mutableListOf((rootLabels[PHONE_ROOT] ?: "Phone") to PHONE_ROOT)
             val rest = n.removePrefix(PHONE_ROOT).trim('/')
@@ -234,12 +234,13 @@ object FsPath {
             }
             return chain.toList()
         }
+        val netLabel = rootLabels[SMB_ROOT] ?: "Network"
         if (isRemote(n)) {
             // Saved servers / mounts with an alias start their crumbs at the labelled root.
             val mount = rootLabels.keys.filter { isRemote(it) && isWithin(it, n) }.maxByOrNull { it.length }
             if (mount != null || !isSmb(n)) {
                 val root = mount ?: (n.substringBefore("://") + "://" + n.substringAfter("://").substringBefore('/'))
-                val out = mutableListOf("Network" to SMB_ROOT, (rootLabels[root] ?: name(root)) to root)
+                val out = mutableListOf(netLabel to SMB_ROOT, (rootLabels[root] ?: name(root)) to root)
                 var cur = root
                 n.removePrefix(root).split('/').filter { it.isNotEmpty() }.forEach { seg -> cur = "$cur/$seg"; out += seg to cur }
                 return out
@@ -247,7 +248,7 @@ object FsPath {
         }
         if (isSmb(n)) {
             val sp = parseSmb(n)
-            val out = mutableListOf("Network" to SMB_ROOT, sp.host to (SMB_ROOT + sp.host))
+            val out = mutableListOf(netLabel to SMB_ROOT, sp.host to (SMB_ROOT + sp.host))
             var cur = SMB_ROOT + sp.host
             if (sp.share != null) {
                 cur = "$cur/${sp.share}"

@@ -3,13 +3,25 @@
 
 package com.droid.wayfinder.data
 
+import androidx.annotation.StringRes
+import com.droid.wayfinder.R
 import java.util.Calendar
 import java.util.TimeZone
 
-enum class SearchScope(val label: String) { Folder("This folder"), Everywhere("Everywhere") }
+enum class SearchScope(val label: String, @StringRes val labelRes: Int) {
+    Folder("This folder", R.string.search_scope_folder),
+    Everywhere("Everywhere", R.string.search_scope_everywhere),
+}
 
-enum class SearchCategory(val label: String) {
-    All("All"), Images("Images"), Videos("Videos"), Audio("Audio"), Docs("Docs"), Archives("Archives"), Code("Code"), Apks("APKs");
+enum class SearchCategory(val label: String, @StringRes val labelRes: Int) {
+    All("All", R.string.search_cat_all),
+    Images("Images", R.string.search_cat_images),
+    Videos("Videos", R.string.search_cat_videos),
+    Audio("Audio", R.string.search_cat_audio),
+    Docs("Docs", R.string.search_cat_docs),
+    Archives("Archives", R.string.search_cat_archives),
+    Code("Code", R.string.search_cat_code),
+    Apks("APKs", R.string.search_cat_apks);
 
     fun matches(e: FileEntry): Boolean = when (this) {
         All -> true
@@ -23,8 +35,12 @@ enum class SearchCategory(val label: String) {
     }
 }
 
-enum class ModifiedRange(val label: String) {
-    Any("Any time"), Today("Today"), Week("Last 7 days"), Month("Last 30 days"), Year("This year");
+enum class ModifiedRange(val label: String, @StringRes val labelRes: Int) {
+    Any("Any time", R.string.search_mod_any),
+    Today("Today", R.string.search_mod_today),
+    Week("Last 7 days", R.string.search_mod_week),
+    Month("Last 30 days", R.string.search_mod_month),
+    Year("This year", R.string.search_mod_year);
 
     /** Earliest modification time (ms) that passes, or null for no limit. */
     fun since(now: Long, tz: TimeZone = TimeZone.getDefault()): Long? {

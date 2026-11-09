@@ -763,10 +763,10 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
             } catch (e: CancellationException) {
                 throw e
             } catch (e: RemoteAuthException) {
-                updateTab(id) { if (it.path == path) it.copy(loading = false, entries = emptyList(), error = TabError(e.message ?: "Sign in required", e.host)) else it }
+                updateTab(id) { if (it.path == path) it.copy(loading = false, entries = emptyList(), error = TabError(e.message ?: str(com.droid.wayfinder.R.string.error_sign_in_required), e.host)) else it }
                 if (tab.id == id) promptAuth(e.host)
             } catch (e: Exception) {
-                updateTab(id) { if (it.path == path) it.copy(loading = false, entries = emptyList(), error = TabError(e.message ?: "Couldn't open this folder")) else it }
+                updateTab(id) { if (it.path == path) it.copy(loading = false, entries = emptyList(), error = TabError(e.message ?: str(com.droid.wayfinder.R.string.error_cannot_open_folder))) else it }
             }
         }
     }
@@ -863,7 +863,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
                 return
             } catch (_: Exception) {}
         }
-        toast("Unable to open settings")
+        toast(str(com.droid.wayfinder.R.string.toast_unable_open_settings))
     }
 
     /** Recently modified files across all storage roots (bounded walk, cached for a short while). */
@@ -1016,8 +1016,8 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
         val other = _state.value.otherPane ?: return
         val dest = other.path
         val sources = selectionPaths().filter { !FsPath.isVirtual(it) }
-        if (sources.isEmpty()) { toast("Select items to ${if (move) "move" else "copy"}"); return }
-        if (FsPath.isReadOnly(dest) || trash.isInTrash(dest) || dest == tab.path) { toast("Can't ${if (move) "move" else "copy"} there"); return }
+        if (sources.isEmpty()) { toast(str(if (move) com.droid.wayfinder.R.string.toast_select_items_to_move else com.droid.wayfinder.R.string.toast_select_items_to_copy)); return }
+        if (FsPath.isReadOnly(dest) || trash.isInTrash(dest) || dest == tab.path) { toast(str(if (move) com.droid.wayfinder.R.string.toast_cannot_move_there else com.droid.wayfinder.R.string.toast_cannot_copy_there)); return }
         transferWithPrompt(sources, dest, move && sources.none { FsPath.isZip(it) })
     }
 
@@ -1168,7 +1168,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
 
     private fun openFile(path: String, chooser: Boolean = false) {
         if (FsPath.isLocalFile(path)) {
-            if (isUnsafeToExpose(path)) { toast("This file can't be opened"); return }
+            if (isUnsafeToExpose(path)) { toast(str(com.droid.wayfinder.R.string.toast_file_cannot_be_opened)); return }
             if (isDirectlyServableByFileProvider(path)) {
                 emit(UiEvent.OpenFile(path, chooser))
                 return
@@ -1178,7 +1178,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
         // are staged into cacheDir first so external apps receive a valid FileProvider URI.
         val zip = FsPath.isZip(path)
         val dir = File(app.cacheDir, "${if (zip) "zip-open" else "remote-open"}/${cacheKeyFor(path)}").apply { mkdirs() }
-        launchOp(if (zip) "Extracting" else if (FsPath.isLocalFile(path)) "Preparing" else "Downloading", { report ->
+        launchOp(str(if (zip) com.droid.wayfinder.R.string.op_extracting else if (FsPath.isLocalFile(path)) com.droid.wayfinder.R.string.op_preparing else com.droid.wayfinder.R.string.op_downloading), { report ->
             ops.transfer(listOf(path), dir.path, move = false, conflict = Conflict.Replace, onProgress = report)
         }) { res ->
             val target = res.firstOrNull()?.target ?: File(dir, FileInfo.sanitizeFileName(FsPath.name(path), "file")).path
@@ -1361,7 +1361,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
     fun cycleTheme() {
         val next = ThemeMode.entries[(_state.value.theme.ordinal + 1) % ThemeMode.entries.size]
         SharedUi.setTheme(next)
-        toast(str(com.droid.wayfinder.R.string.toast_theme_changed, next.label))
+        toast(str(com.droid.wayfinder.R.string.toast_theme_changed, str(next.labelRes)))
     }
 
     fun toggleTagsColumn() { val v = !_state.value.tagsColumn; settings.tagsColumn = v; _state.update { it.copy(tagsColumn = v) } }
@@ -1575,7 +1575,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
     fun unpin(path: String) {
         if (path !in _state.value.pins) return
         setPins(_state.value.pins - path)
-        toast("Unpinned ${FsPath.name(path)}")
+        toast(str(com.droid.wayfinder.R.string.toast_unpinned_single, FsPath.name(path)))
     }
 
     /** Opens a pinned folder or file from the sidebar (navigates into folders/archives, opens and reveals regular files). */
@@ -1644,9 +1644,9 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
                 }
                 after(result)
             } catch (e: CancellationException) {
-                toast("Cancelled")
+                toast(str(com.droid.wayfinder.R.string.toast_cancelled))
             } catch (e: Throwable) {
-                toast(e.message ?: "$title failed")
+                toast(e.message ?: str(com.droid.wayfinder.R.string.toast_op_failed, title))
             } finally {
                 opJobs.remove(id)
                 _state.update { s -> s.copy(ops = s.ops.filter { it.id != id }) }
@@ -1687,7 +1687,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
         }
         FsPath.tagOf(targetDir)?.let { t ->
             SharedUi.updateMarks { m -> m.copy(tags = m.tags + paths.associateWith { p -> m.tagsOf(p) + t }) }
-            toast(str(com.droid.wayfinder.R.string.toast_tagged_color, t.label)); return
+            toast(str(com.droid.wayfinder.R.string.toast_tagged_color, str(t.labelRes))); return
         }
         if (targetDir == FsPath.TRASH_ROOT) {
             val local = paths.filter { !FsPath.isRemote(it) && !trash.isInTrash(it) }
@@ -1844,14 +1844,14 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
         val paths = selectionPaths().filter { !FsPath.isReadOnly(it) && !trash.isInTrash(it) }
         val t = tab
         if (paths.isEmpty() || FsPath.isReadOnly(t.path) || trash.isInTrash(t.path)) return
-        launchOp("Duplicating", { report -> ops.duplicate(paths, report) }) { out ->
+        launchOp(str(com.droid.wayfinder.R.string.op_duplicating), { report -> ops.duplicate(paths, report) }) { out ->
             record(Undo.Created(out))
             updateTab(t.id) { it.copy(selection = out.toSet(), focused = out.lastOrNull(), anchor = out.firstOrNull()) }
         }
     }
 
     fun requestNewItem(folder: Boolean) {
-        if (FsPath.isReadOnly(tab.path)) { if (FsPath.isZip(tab.path)) toast("Archives are read-only"); return }
+        if (FsPath.isReadOnly(tab.path)) { if (FsPath.isZip(tab.path)) toast(str(com.droid.wayfinder.R.string.toast_archives_read_only)); return }
         showDialog(Dialog.NewItem(folder))
     }
 
@@ -1862,9 +1862,9 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
         // Typed names must stay inside the current folder ("../x", "a/b", NUL, ...).
         FsPath.nameError(n)?.let { toast(it); return }
         val dir = tab.path
-        launchOp("Creating", { _ ->
+        launchOp(str(com.droid.wayfinder.R.string.op_creating), { _ ->
             val target = FsPath.child(dir, n)
-            if (repo.fs(dir).exists(target)) throw java.io.IOException("\"$n\" already exists")
+            if (repo.fs(dir).exists(target)) throw java.io.IOException(str(com.droid.wayfinder.R.string.toast_item_already_exists, n))
             if (folder) repo.fs(dir).mkdir(target) else repo.fs(dir).createFile(target)
             target
         }) { target ->
@@ -1885,7 +1885,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
         val dir = tab.path
         val wanted = name.trim().removeSuffix(".zip") + ".zip"
         FsPath.nameError(wanted)?.let { toast(it); return }
-        launchOp("Compressing", { report ->
+        launchOp(str(com.droid.wayfinder.R.string.op_compressing), { report ->
             val fileName = ops.uniqueName(dir, wanted)
             ops.compress(sources, FsPath.child(dir, fileName), report)
         }) { zip ->
@@ -1898,7 +1898,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
         val z = tab.selectedEntries(hidden).filter { isBrowsableArchive(it) }
         if (z.isEmpty() || FsPath.isReadOnly(tab.path)) return
         val dir = tab.path
-        launchOp("Extracting", { report -> z.map { ops.extract(it.path, dir, report) } }) { out ->
+        launchOp(str(com.droid.wayfinder.R.string.op_extracting), { report -> z.map { ops.extract(it.path, dir, report) } }) { out ->
             record(Undo.Created(out))
             updateTab(tab.id) { it.copy(selection = out.toSet()) }
         }
@@ -1906,8 +1906,8 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
 
     fun share() {
         val files = tab.selectedEntries(hidden).filter { !it.isDir && FsPath.isLocalFile(it.path) }.map { it.path }
-        if (files.isEmpty()) { toast("Select local files to share"); return }
-        if (files.any { isUnsafeToExpose(it) }) { toast("This file can't be shared"); return }
+        if (files.isEmpty()) { toast(str(com.droid.wayfinder.R.string.toast_select_local_files_to_share)); return }
+        if (files.any { isUnsafeToExpose(it) }) { toast(str(com.droid.wayfinder.R.string.toast_file_cannot_be_shared)); return }
         val (direct, needsStaging) = files.partition { isDirectlyServableByFileProvider(it) }
         if (needsStaging.isEmpty()) {
             emit(UiEvent.Share(direct))
@@ -1916,7 +1916,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
         val base = File(app.cacheDir, "remote-open")
         val now = System.currentTimeMillis()
         val dir = File(base, "share-$now").apply { mkdirs() }
-        launchOp("Preparing share", { report ->
+        launchOp(str(com.droid.wayfinder.R.string.op_preparing_share), { report ->
             ops.transfer(needsStaging, dir.path, move = false, conflict = Conflict.KeepBoth, onProgress = report).map { it.target }
         }) { staged -> emit(UiEvent.Share(direct + staged)) }
     }
@@ -1971,21 +1971,21 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
                 patch { it.copy(space = space) }
             }
             if (single != null && !single.isDir && !single.isServer && !single.isShare) {
-                patch { it.copy(hashProgress = "Computing SHA-256 & CRC32…") }
+                patch { it.copy(hashProgress = str(com.droid.wayfinder.R.string.quicklook_computing_checksums)) }
                 hashJob?.cancel()
                 hashJob = viewModelScope.launch {
                     try {
                         val sums = withContext(Dispatchers.IO) {
                             FileInfo.checksums(repo.fs(single.path).openInput(single.path)) { done ->
                                 val pct = if (single.size > 0) " ${(done * 100 / single.size).coerceIn(0, 100)}%" else ""
-                                patch { it.copy(hashProgress = "Computing SHA-256 & CRC32…$pct") }
+                                patch { it.copy(hashProgress = "${str(com.droid.wayfinder.R.string.quicklook_computing_checksums)}$pct") }
                             }
                         }
                         patch { it.copy(checksums = sums, hashProgress = null) }
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
-                        patch { it.copy(hashProgress = "Couldn't read file: ${e.message}") }
+                        patch { it.copy(hashProgress = str(com.droid.wayfinder.R.string.quicklook_cannot_read_file, e.message.orEmpty())) }
                     }
                 }
             }
@@ -2014,17 +2014,17 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
                 uris.forEachIndexed { i, uri ->
                     // Only content:// URIs from other apps: file:// (or our own provider) would let the dragging app
                     // make us copy our private files (e.g. saved server credentials) to shared storage.
-                    if (!isImportable(uri)) throw java.io.IOException("Can't import this item (unsupported source)")
+                    if (!isImportable(uri)) throw java.io.IOException(str(com.droid.wayfinder.R.string.toast_cannot_import_source))
                     PhoneDetector.extractQuickAccessRootId(uri)?.let { settings.lastQuickAccessRootId = it }
                     val raw = runCatching {
                         cr.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
                             if (c.moveToFirst()) c.getString(0) else null
                         }
                     }.getOrNull() ?: uri.lastPathSegment?.substringAfterLast('/')
-                    val name = FileInfo.sanitizeFileName(raw, "Imported file ${i + 1}")
-                    report(Progress("Importing", doneItems = i, totalItems = uris.size, current = name))
+                    val name = FileInfo.sanitizeFileName(raw, str(com.droid.wayfinder.R.string.imported_file_fallback, i + 1))
+                    report(Progress(str(com.droid.wayfinder.R.string.op_importing), doneItems = i, totalItems = uris.size, current = name))
                     val target = FsPath.child(destDir, ops.uniqueName(destDir, name))
-                    val input = cr.openInputStream(uri) ?: throw java.io.IOException("Can't read $name")
+                    val input = cr.openInputStream(uri) ?: throw java.io.IOException(str(com.droid.wayfinder.R.string.toast_cannot_read_name, name))
                     input.use { inp ->
                         repo.fs(destDir).openOutput(target).use { o ->
                             val buf = ByteArray(256 * 1024)
@@ -2049,7 +2049,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
                 listOfNotNull(_state.value.active, _state.value.otherPane).firstOrNull { it.path == destDir || it.path == dest }?.let { t ->
                     updateTab(t.id) { it.copy(selection = out.toSet()) }
                 }
-                toast(if (out.size == 1) "Copied \"${FsPath.name(out[0])}\" here" else "Copied ${out.size} items here")
+                toast(if (out.size == 1) str(com.droid.wayfinder.R.string.toast_copied_single_here, FsPath.name(out[0])) else icuStr(com.droid.wayfinder.R.string.toast_copied_many_here_plural, out.size))
             }
         }
     }
@@ -2070,8 +2070,8 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
         syncUndo()
     }
 
-    fun undo() = replay(undoStack, redoStack, "Undoing")
-    fun redo() = replay(redoStack, undoStack, "Redoing")
+    fun undo() = replay(undoStack, redoStack, str(com.droid.wayfinder.R.string.op_undoing))
+    fun redo() = replay(redoStack, undoStack, str(com.droid.wayfinder.R.string.op_redoing))
 
     private fun replay(from: ArrayDeque<Undo>, to: ArrayDeque<Undo>, title: String) {
         val u = from.removeLastOrNull() ?: return
@@ -2129,7 +2129,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
     /** "Test connection": signs in on a throw-away connection and lists the location; returns the latency in ms. */
     suspend fun testConnection(cfg: ConnectConfig): Result<Long> = withContext(Dispatchers.IO) {
         val addr = cfg.address
-        if (!RemoteUri.isValidHost(addr.host)) return@withContext Result.failure(java.io.IOException("Enter a valid server address"))
+        if (!RemoteUri.isValidHost(addr.host)) return@withContext Result.failure(java.io.IOException(str(com.droid.wayfinder.R.string.toast_invalid_server_address)))
         val cred = effectiveCred(cfg)
         val creds = CredentialProvider { cred }
         val fs: RemoteFileSystem = when {
@@ -2144,7 +2144,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
         } catch (e: CancellationException) {
             throw e
         } catch (e: RemoteAuthException) {
-            Result.failure(java.io.IOException(if (cred.user.isBlank()) "The server requires a user name and password" else "Sign-in failed: check the user name and password"))
+            Result.failure(java.io.IOException(if (cred.user.isBlank()) str(com.droid.wayfinder.R.string.dialog_smb_sign_in_hint) else str(com.droid.wayfinder.R.string.error_sign_in_failed)))
         } catch (e: Exception) {
             Result.failure(e)
         } finally {
@@ -2322,7 +2322,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
             File(primary, Environment.DIRECTORY_DOWNLOADS).apply { mkdirs() }.path
         }
         launchOp(
-            title = "Importing",
+            title = str(com.droid.wayfinder.R.string.op_importing),
             work = { report ->
                 val created = mutableListOf<String>()
                 for ((idx, uri) in uris.withIndex()) {
@@ -2350,10 +2350,10 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
                     )
                     val finalName = ops.uniqueName(destDir, baseName)
                     val targetFile = File(destDir, finalName)
-                    report(Progress("Importing", 0L, declaredSize, idx, uris.size, finalName))
+                    report(Progress(str(com.droid.wayfinder.R.string.op_importing), 0L, declaredSize, idx, uris.size, finalName))
                     try {
                         val inp = app.contentResolver.openInputStream(uri)
-                            ?: throw java.io.IOException("Couldn't read \"$finalName\"")
+                            ?: throw java.io.IOException(str(com.droid.wayfinder.R.string.toast_cannot_read_name, finalName))
                         inp.use { src ->
                             targetFile.outputStream().use { dst ->
                                 val buf = ByteArray(128 * 1024)
@@ -2364,7 +2364,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
                                     if (n < 0) break
                                     dst.write(buf, 0, n)
                                     copied += n
-                                    report(Progress("Importing", copied, declaredSize, idx, uris.size, finalName))
+                                    report(Progress(str(com.droid.wayfinder.R.string.op_importing), copied, declaredSize, idx, uris.size, finalName))
                                 }
                             }
                         }
@@ -2385,7 +2385,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
                     updateTab(tab.id) {
                         it.copy(selection = imported.toSet(), focused = imported.first())
                     }
-                    toast("Imported ${imported.size} file(s) to ${FsPath.name(destDir)}", undo = true)
+                    toast(icuStr(com.droid.wayfinder.R.string.toast_imported_many_plural, imported.size, FsPath.name(destDir)), undo = true)
                 }
             },
         )
@@ -2434,7 +2434,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
             }
         }
         if (!persisted && cr.persistedUriPermissions.none { it.uri == uri }) {
-            toast("Couldn't keep access to this location"); return
+            toast(str(com.droid.wayfinder.R.string.toast_cannot_keep_access)); return
         }
         safMounts.firstOrNull { it.uri == uri.toString() }?.let { refreshMounts(); navigate(it.path); return }
         viewModelScope.launch {
@@ -2524,10 +2524,10 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
         if (p.mode != com.droid.wayfinder.data.PickerMode.CreateDocument) return
         val dir = tab.path
         if (FsPath.isReadOnly(dir) || trash.isInTrash(dir)) {
-            toast("Cannot save files in this location"); return
+            toast(str(com.droid.wayfinder.R.string.toast_cannot_save_file)); return
         }
         if (FsPath.isLocalFile(dir) && (FileInfo.isSymlink(dir) || isPrivatePath(dir) || !isDirectlyServableByFileProvider(dir))) {
-            toast("Cannot save files in this location"); return
+            toast(str(com.droid.wayfinder.R.string.toast_cannot_save_file)); return
         }
         val name = _state.value.createFileName.trim()
         val err = FsPath.nameError(name)
@@ -2560,7 +2560,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
                 load(tab.id, select = createdPath)
                 emit(UiEvent.CreateDocumentResult(createdPath, uri, requestedMime))
             }.onFailure { e ->
-                toast(e.message ?: "Couldn't create file")
+                toast(e.message ?: str(com.droid.wayfinder.R.string.toast_cannot_create_file))
             }
         }
     }
@@ -2569,11 +2569,11 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
     fun pick(entries: List<FileEntry>) {
         val p = picker ?: return
         val files = entries.filter { !it.isDir }
-        if (files.isEmpty()) { toast("Select a file"); return }
-        if (!p.allowMultiple && files.size > 1) { toast("The requesting app accepts a single file"); return }
-        if (files.any { !acceptsForPick(it) }) { toast("The requesting app expects ${p.description ?: "a different kind of file"}"); return }
+        if (files.isEmpty()) { toast(str(com.droid.wayfinder.R.string.toast_select_a_file)); return }
+        if (!p.allowMultiple && files.size > 1) { toast(str(com.droid.wayfinder.R.string.toast_app_accepts_single_file)); return }
+        if (files.any { !acceptsForPick(it) }) { toast(str(com.droid.wayfinder.R.string.toast_app_expects_format, p.description ?: str(com.droid.wayfinder.R.string.toast_different_kind_of_file))); return }
         // Never hand out symbolic links or the app's private files (settings, saved servers) to external apps.
-        if (files.any { FsPath.isLocalFile(it.path) && isUnsafeToExpose(it.path) }) { toast("This file can't be shared"); return }
+        if (files.any { FsPath.isLocalFile(it.path) && isUnsafeToExpose(it.path) }) { toast(str(com.droid.wayfinder.R.string.toast_file_cannot_be_shared)); return }
         val directLocal = files.filter { FsPath.isLocalFile(it.path) && isDirectlyServableByFileProvider(it.path) }.map { it.path }
         val toStage = files.filter { !FsPath.isLocalFile(it.path) || !isDirectlyServableByFileProvider(it.path) }.map { it.path }
         if (toStage.isEmpty()) { emit(UiEvent.PickResult(directLocal)); return }
@@ -2581,7 +2581,7 @@ class BrowserViewModel(private val app: Application, handle: SavedStateHandle) :
         val now = System.currentTimeMillis()
         base.listFiles()?.filter { now - it.lastModified() > 24 * 3600_000L }?.forEach { FileInfo.deleteTree(it) }
         val dir = File(base, now.toString()).apply { mkdirs() }
-        launchOp("Downloading", { report ->
+        launchOp(str(com.droid.wayfinder.R.string.op_downloading), { report ->
             ops.transfer(toStage, dir.path, move = false, conflict = Conflict.KeepBoth, onProgress = report).map { it.target }
         }) { got -> emit(UiEvent.PickResult(directLocal + got)) }
     }

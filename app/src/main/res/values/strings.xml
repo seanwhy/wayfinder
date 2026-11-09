@@ -308,4 +308,348 @@
     <string name="op_renaming" description="Progress banner title while renaming items. [CHAR_LIMIT=20]">Renaming</string>
     <string name="op_importing" description="Progress banner title while importing dragged external files. [CHAR_LIMIT=25]">Importing</string>
     <string name="phone_privilege_note" description="Note shown on the Phone screen explaining that Wayfinder does not have system privileges to directly mount companion phones. [CHAR_LIMIT=140]">Please note: Wayfinder lacks necessary system privileges to directly mount companion phones.</string>
+    <!-- Localized additions -->
+    <string name="about_copyright" description="Copyright notice shown in the About Wayfinder dialog. [CHAR_LIMIT=120]">Copyright 2026 The Wayfinder Authors. Licensed under the Apache License, Version 2.0.</string>
+    <string name="about_description" description="Application description paragraph in the About dialog. [CHAR_LIMIT=200]">Desktop-class file manager for Android laptops and tablets with multi-tab browsing, dual-pane transfers, archive support, and SMB / WebDAV / FTP networking.</string>
+    <string name="about_dialog_title" description="Dialog title for the About Wayfinder dialog. [CHAR_LIMIT=25]">About Wayfinder</string>
+    <string name="about_licenses_title" description="Dialog title and button label to show open-source licenses. [CHAR_LIMIT=30]">Open-source licenses</string>
+    <string name="about_loading_notices" description="Placeholder message while loading open-source license notices. [CHAR_LIMIT=35]">Loading notices…</string>
+    <string name="about_notices_unavailable" description="Fallback text when open-source license notices asset is missing. [CHAR_LIMIT=45]">Open-source notices unavailable.</string>
+    <string name="about_version_format" description="Version string format in About dialog with version name. [CHAR_LIMIT=25]">Version {0}</string>
+    <string name="action_batch_rename" description="Context menu and action button to start batch renaming items. [CHAR_LIMIT=25]">Batch rename…</string>
+    <string name="action_connect_to_server" description="Action button or menu item to open Connect to Server dialog. [CHAR_LIMIT=30]">Connect to server</string>
+    <string name="action_new_tab" description="Action to open a new tab. [CHAR_LIMIT=20]">New tab</string>
+    <string name="action_new_window" description="Action to open a new application window. [CHAR_LIMIT=20]">New window</string>
+    <string name="action_rescan" description="Action to rescan network or storage. [CHAR_LIMIT=20]">Rescan</string>
+    <string name="action_save" description="Action button to save file in picker. [CHAR_LIMIT=20]">Save</string>
+    <string name="batch_rename_conflict_duplicate" description="Error label in batch rename dialog when new name duplicates another item. [CHAR_LIMIT=30]">Duplicate name</string>
+    <string name="batch_rename_conflict_exists" description="Error label in batch rename dialog when destination file already exists. [CHAR_LIMIT=30]">Already exists</string>
+    <string name="batch_rename_dialog_title_plural" description="Batch rename dialog title with count of items to rename. [CHAR_LIMIT=45]">{0, plural, =1 {Batch rename (# item)} other {Batch rename (# items)}}</string>
+    <string name="chooser_open_with" description="Chooser dialog title when selecting an application to open a file. [CHAR_LIMIT=25]">Open with</string>
+    <string name="col_date_modified" description="Column header and sort key for modification timestamp. [CHAR_LIMIT=25]">Date modified</string>
+    <string name="col_items" description="Column header for item count in folders. [CHAR_LIMIT=20]">Items</string>
+    <string name="col_name" description="Column header and sort key for file name. [CHAR_LIMIT=20]">Name</string>
+    <string name="col_permissions" description="Column header for POSIX or file permissions. [CHAR_LIMIT=20]">Permissions</string>
+    <string name="col_size" description="Column header and sort key for file size. [CHAR_LIMIT=20]">Size</string>
+    <string name="col_tags" description="Column header for color tags. [CHAR_LIMIT=20]">Tags</string>
+    <string name="col_type" description="Column header and sort key for file type. [CHAR_LIMIT=20]">Type</string>
+    <string name="connect_action_connect_and_mount" description="Confirm button in Connect to Server dialog to connect and mount. [CHAR_LIMIT=30]">Connect &amp; mount</string>
+    <string name="connect_auth_anonymous" description="Authentication mode switch for anonymous connection. [CHAR_LIMIT=20]">Anonymous</string>
+    <string name="connect_auth_guest" description="Authentication mode switch for guest connection. [CHAR_LIMIT=20]">Guest</string>
+    <string name="connect_dialog_title" description="Dialog title for the Connect to Server dialog. [CHAR_LIMIT=30]">Connect to Server</string>
+    <string name="connect_field_alias_optional" description="Input field label for custom server nickname or alias. [CHAR_LIMIT=30]">Alias (optional)</string>
+    <string name="connect_field_base_path_optional" description="Input field label for remote base path or root directory. [CHAR_LIMIT=30]">Base path (optional)</string>
+    <string name="connect_field_host" description="Input field label for server hostname or IP. [CHAR_LIMIT=35]">Server address or host</string>
+    <string name="connect_field_password_saved" description="Input field label indicating saved password is present. [CHAR_LIMIT=30]">Password (saved)</string>
+    <string name="connect_field_port" description="Input field label for network connection port. [CHAR_LIMIT=20]">Port</string>
+    <string name="connect_field_server_or_unc" description="Input field label for server address or UNC path. [CHAR_LIMIT=35]">Server address or URL</string>
+    <string name="connect_field_share_optional" description="Input field label for SMB share name. [CHAR_LIMIT=30]">Share name (optional)</string>
+    <string name="connect_remember_credentials" description="Checkbox label to save connection credentials securely. [CHAR_LIMIT=30]">Remember password</string>
+    <string name="connect_saved_servers" description="Section header for previously saved network servers. [CHAR_LIMIT=30]">Saved servers</string>
+    <string name="connect_test_connection" description="Button to test server connectivity before connecting. [CHAR_LIMIT=25]">Test connection</string>
+    <string name="connect_test_failed" description="Error message when server connection test fails. [CHAR_LIMIT=60]">Connection failed: {0}</string>
+    <string name="connect_test_ok_ms" description="Success message with response time when server test succeeds. [CHAR_LIMIT=40]">Connected in {0} ms</string>
+    <string name="connect_unencrypted_warning" description="Warning shown for plain HTTP or unencrypted protocols. [CHAR_LIMIT=45]">Warning: unencrypted connection</string>
+    <string name="default_handler_app_settings" description="Button to open Android system App Settings for Wayfinder. [CHAR_LIMIT=30]">Open app settings</string>
+    <string name="default_handler_howto_body" description="Instructions explaining how to make Wayfinder the default file handler in Android. [CHAR_LIMIT=180]">To open folders and files in Wayfinder automatically, set Wayfinder as the default app or enable Open supported links in system settings.</string>
+    <string name="default_handler_howto_title" description="Title for instructions section in Default Handler dialog. [CHAR_LIMIT=40]">Setting default file manager</string>
+    <string name="default_handler_intro" description="Introductory text in Default Handler dialog. [CHAR_LIMIT=120]">Wayfinder can handle file and folder open intents from other applications.</string>
+    <string name="default_handler_not_now" description="Dismiss button label in Default Handler dialog. [CHAR_LIMIT=20]">Not now</string>
+    <string name="default_handler_supported_body" description="Body text describing supported formats and URIs. [CHAR_LIMIT=140]">Wayfinder supports content URIs, file paths, and standard file manager intents.</string>
+    <string name="default_handler_supported_title" description="Section header for supported intent types. [CHAR_LIMIT=40]">Supported links &amp; intents</string>
+    <string name="default_handler_test_prompt" description="Tip explaining how to test default handler behavior. [CHAR_LIMIT=120]">You can test intent handling by launching a file from another application.</string>
+    <string name="default_handler_title" description="Dialog title for Default Handler settings dialog. [CHAR_LIMIT=30]">Default file manager</string>
+    <string name="dialog_smb_user_label" description="Properties dialog display of current SMB network user. [CHAR_LIMIT=35]">User: {0}</string>
+    <string name="drag_copy_to_target" description="Drag ghost label when dragging items to copy to target folder. [CHAR_LIMIT=40]">Copy to {0}</string>
+    <string name="drag_move_to_target" description="Drag ghost label when dragging items to move to target folder. [CHAR_LIMIT=40]">Move to {0}</string>
+    <string name="drag_move_to_trash" description="Drag ghost label when dragging items over Trash bin. [CHAR_LIMIT=30]">Move to Trash</string>
+    <string name="error_cannot_open_folder" description="Error title when folder navigation fails. [CHAR_LIMIT=30]">Cannot open folder</string>
+    <string name="error_name_control_chars" description="Validation error when file name contains ASCII/Unicode control characters. [CHAR_LIMIT=50]">Names can't contain control characters</string>
+    <string name="error_name_empty" description="Validation error when file or folder name is blank. [CHAR_LIMIT=30]">Name can't be empty</string>
+    <string name="error_name_invalid" description="Validation error when file or folder name is invalid. [CHAR_LIMIT=30]">Invalid name</string>
+    <string name="error_name_slashes" description="Validation error when file name contains slash characters. [CHAR_LIMIT=40]">Names can't contain slashes</string>
+    <string name="error_name_too_long" description="Validation error when file name exceeds maximum allowed length. [CHAR_LIMIT=30]">Name is too long</string>
+    <string name="error_sign_in_failed" description="Error message when cloud or server authentication fails. [CHAR_LIMIT=30]">Sign in failed</string>
+    <string name="error_sign_in_required" description="Prompt message when accessing a protected cloud account or server. [CHAR_LIMIT=30]">Sign in required</string>
+    <string name="imported_file_fallback" description="Default name for imported file when source file name cannot be determined. [CHAR_LIMIT=30]">Imported file</string>
+    <string name="items_count_plural" description="Item count summary for drag ghost and batch selections. [CHAR_LIMIT=30]">{0, plural, =1 {# item} other {# items}}</string>
+    <string name="kind_apk" description="File kind description for APK application packages. [CHAR_LIMIT=25]">Android app</string>
+    <string name="kind_archive" description="File kind description for ZIP, TAR, and other archive files. [CHAR_LIMIT=25]">Archive</string>
+    <string name="kind_audio" description="File kind description for audio and music files. [CHAR_LIMIT=20]">Audio</string>
+    <string name="kind_code" description="File kind description for code and programming files. [CHAR_LIMIT=25]">Source code</string>
+    <string name="kind_document" description="File kind description for word processing and rich documents. [CHAR_LIMIT=20]">Document</string>
+    <string name="kind_file" description="Generic file kind label for unknown or miscellaneous files. [CHAR_LIMIT=20]">File</string>
+    <string name="kind_folder" description="File kind description for directories and folders. [CHAR_LIMIT=20]">Folder</string>
+    <string name="kind_image" description="File kind description for picture and photo files. [CHAR_LIMIT=20]">Image</string>
+    <string name="kind_other" description="File kind description for uncategorized files. [CHAR_LIMIT=20]">File</string>
+    <string name="kind_pdf" description="File kind description for Portable Document Format files. [CHAR_LIMIT=25]">PDF document</string>
+    <string name="kind_sheet" description="File kind description for spreadsheet files. [CHAR_LIMIT=25]">Spreadsheet</string>
+    <string name="kind_slides" description="File kind description for presentation slides files. [CHAR_LIMIT=25]">Presentation</string>
+    <string name="kind_text" description="File kind description for plain text files. [CHAR_LIMIT=25]">Text file</string>
+    <string name="kind_video" description="File kind description for movie and video files. [CHAR_LIMIT=20]">Video</string>
+    <string name="linux_files_title" description="Root directory and sidebar display title for ChromeOS/Googlebook Linux files. [CHAR_LIMIT=25]">Linux files</string>
+    <string name="menu_checked_on" description="Accessibility status indicating a toggle or checkable menu option is active. [CHAR_LIMIT=15]">On</string>
+    <string name="miller_empty_folder" description="Text displayed in an empty Miller column pane. [CHAR_LIMIT=25]">Empty folder</string>
+    <string name="miller_modified_date" description="Modification date display in Miller column preview pane. [CHAR_LIMIT=40]">Modified {0}</string>
+    <string name="mount_subtitle_cloud_provider" description="Subtitle in sidebar for SAF cloud and external storage provider mounts. [CHAR_LIMIT=35]">Cloud / storage provider</string>
+    <string name="nav_back" description="Navigation button label to return to previous view. [CHAR_LIMIT=20]">Back</string>
+    <string name="nav_network" description="Navigation and breadcrumb label for network shares and servers. [CHAR_LIMIT=20]">Network</string>
+    <string name="op_compressing" description="Progress banner title while creating a ZIP archive. [CHAR_LIMIT=25]">Compressing</string>
+    <string name="op_creating" description="Progress banner title while creating a new file or folder. [CHAR_LIMIT=25]">Creating</string>
+    <string name="op_downloading" description="Progress banner title while downloading remote items. [CHAR_LIMIT=25]">Downloading</string>
+    <string name="op_duplicating" description="Progress banner title while duplicating items. [CHAR_LIMIT=25]">Duplicating</string>
+    <string name="op_extracting" description="Progress banner title while extracting an archive. [CHAR_LIMIT=25]">Extracting</string>
+    <string name="op_preparing" description="Progress banner title while preparing a file operation. [CHAR_LIMIT=25]">Preparing</string>
+    <string name="op_preparing_share" description="Progress banner title while preparing files for Android share sheet. [CHAR_LIMIT=25]">Preparing share</string>
+    <string name="op_redoing" description="Progress banner title while redoing a file operation. [CHAR_LIMIT=25]">Redoing</string>
+    <string name="op_undoing" description="Progress banner title while undoing a file operation. [CHAR_LIMIT=25]">Undoing</string>
+    <string name="overflow_about" description="Overflow menu item to show About dialog. [CHAR_LIMIT=20]">About</string>
+    <string name="overflow_about_wayfinder" description="Overflow menu item to show About Wayfinder dialog. [CHAR_LIMIT=25]">About Wayfinder</string>
+    <string name="overflow_command_palette" description="Overflow menu item to open Command Palette. [CHAR_LIMIT=30]">Command palette (Ctrl+K)</string>
+    <string name="overflow_default_handler" description="Overflow menu item to open Default Handler dialog. [CHAR_LIMIT=30]">Default file manager…</string>
+    <string name="overflow_dual_pane" description="Overflow menu item to toggle dual-pane mode. [CHAR_LIMIT=20]">Dual pane</string>
+    <string name="overflow_keyboard_shortcuts" description="Overflow menu item to show keyboard shortcuts help dialog. [CHAR_LIMIT=30]">Keyboard shortcuts</string>
+    <string name="overflow_perms_column" description="Overflow menu toggle for displaying permissions column in details view. [CHAR_LIMIT=25]">Permissions column</string>
+    <string name="overflow_preview_pane" description="Overflow menu toggle to show or hide the details/preview pane. [CHAR_LIMIT=25]">Preview pane</string>
+    <string name="overflow_reset_zoom" description="Overflow menu action to reset icon grid zoom level to default. [CHAR_LIMIT=25]">Reset zoom</string>
+    <string name="overflow_sidebar" description="Overflow menu toggle to show or hide the navigation sidebar. [CHAR_LIMIT=20]">Sidebar</string>
+    <string name="overflow_sort_ascending" description="Overflow sort menu option for ascending sort order. [CHAR_LIMIT=20]">Ascending</string>
+    <string name="overflow_sort_by_modified" description="Overflow sort menu option to sort items by modification date. [CHAR_LIMIT=25]">Date modified</string>
+    <string name="overflow_sort_by_name" description="Overflow sort menu option to sort items by name. [CHAR_LIMIT=20]">Name</string>
+    <string name="overflow_sort_by_size" description="Overflow sort menu option to sort items by file size. [CHAR_LIMIT=20]">Size</string>
+    <string name="overflow_sort_by_type" description="Overflow sort menu option to sort items by file type. [CHAR_LIMIT=20]">Type</string>
+    <string name="overflow_sort_descending" description="Overflow sort menu option for descending sort order. [CHAR_LIMIT=20]">Descending</string>
+    <string name="overflow_tags_column" description="Overflow menu toggle for displaying tags column in details view. [CHAR_LIMIT=25]">Tags column</string>
+    <string name="overflow_theme_format" description="Overflow menu item showing currently active app theme. [CHAR_LIMIT=30]">Theme: {0}</string>
+    <string name="overflow_theme_hint" description="Overflow menu submenu header for app theme selection. [CHAR_LIMIT=20]">Theme</string>
+    <string name="overflow_view_columns" description="Overflow view mode submenu item for Miller columns view. [CHAR_LIMIT=20]">Columns</string>
+    <string name="overflow_view_details" description="Overflow view mode submenu item for Details table view. [CHAR_LIMIT=20]">Details</string>
+    <string name="overflow_view_grid" description="Overflow view mode submenu item for Grid icon view. [CHAR_LIMIT=20]">Grid</string>
+    <string name="overflow_view_list" description="Overflow view mode submenu item for List compact view. [CHAR_LIMIT=20]">List</string>
+    <string name="overflow_zoom_in" description="Overflow menu action to enlarge icon size in grid view. [CHAR_LIMIT=20]">Zoom in</string>
+    <string name="overflow_zoom_out" description="Overflow menu action to decrease icon size in grid view. [CHAR_LIMIT=20]">Zoom out</string>
+    <string name="palette_about_desc" description="Command palette description for About Wayfinder. [CHAR_LIMIT=60]">Show app version and open-source licenses</string>
+    <string name="palette_default_handler_desc" description="Command palette description for Default Handler command. [CHAR_LIMIT=65]">Instructions for making Wayfinder your primary file app</string>
+    <string name="palette_shortcuts_desc" description="Command palette description for Keyboard Shortcuts command. [CHAR_LIMIT=50]">Show keyboard shortcuts reference</string>
+    <string name="palette_show_in_enclosing_desc" description="Command palette description for Show in Enclosing Folder command. [CHAR_LIMIT=55]">Reveal selected item in parent folder</string>
+    <string name="palette_sort_by_modified" description="Command palette command to sort folder contents by modification timestamp. [CHAR_LIMIT=35]">Sort by date modified</string>
+    <string name="palette_sort_by_modified_desc" description="Command palette description for Sort by Date Modified. [CHAR_LIMIT=50]">Sort contents by latest modified time</string>
+    <string name="palette_sort_by_name" description="Command palette command to sort folder contents alphabetically by name. [CHAR_LIMIT=30]">Sort by name</string>
+    <string name="palette_sort_by_name_desc" description="Command palette description for Sort by Name. [CHAR_LIMIT=50]">Sort contents alphabetically by name</string>
+    <string name="palette_sort_by_size" description="Command palette command to sort folder contents by file size. [CHAR_LIMIT=30]">Sort by size</string>
+    <string name="palette_sort_by_size_desc" description="Command palette description for Sort by Size. [CHAR_LIMIT=50]">Sort contents from largest to smallest</string>
+    <string name="palette_sort_by_type" description="Command palette command to sort folder contents by file type. [CHAR_LIMIT=30]">Sort by type</string>
+    <string name="palette_sort_by_type_desc" description="Command palette description for Sort by Type. [CHAR_LIMIT=50]">Sort contents grouped by file type</string>
+    <string name="palette_tag_show" description="Command palette command to filter files by color tag. [CHAR_LIMIT=35]">Show tag: {0}</string>
+    <string name="palette_tag_show_desc" description="Command palette description for tag filter command. [CHAR_LIMIT=50]">Filter folder by {0} tag</string>
+    <string name="palette_tag_toggle" description="Command palette command to toggle color tag on selected items. [CHAR_LIMIT=30]">Tag: {0}</string>
+    <string name="palette_tag_toggle_desc" description="Command palette description for toggling tag on selection. [CHAR_LIMIT=50]">Toggle {0} tag on selection</string>
+    <string name="perm_all_files_body" description="Permission explanation body text on the storage permission grant screen. [CHAR_LIMIT=200]">Wayfinder needs “All files access” to browse, copy and organise folders on this device. Nothing leaves your device except files you explicitly copy to a network share.</string>
+    <string name="perm_all_files_title" description="Title on the storage permission grant screen. [CHAR_LIMIT=35]">Allow access to all files</string>
+    <string name="perm_open_settings" description="Button to open Android system settings to grant All Files Access permission. [CHAR_LIMIT=25]">Open settings</string>
+    <string name="phone_connected_default" description="Default device name for a connected companion phone. [CHAR_LIMIT=25]">Connected Phone</string>
+    <string name="phone_default_name" description="Fallback display name for companion phone root. [CHAR_LIMIT=20]">Phone</string>
+    <string name="phone_quick_share" description="Sidebar label for Quick Share downloads location. [CHAR_LIMIT=25]">Quick Share</string>
+    <string name="phone_subtitle_bt_tap_connect" description="Sidebar subtitle for companion phone reachable over Bluetooth. [CHAR_LIMIT=35]">Tap to connect phone storage</string>
+    <string name="phone_subtitle_cross_device" description="Sidebar subtitle for companion phone under Cross-Device services. [CHAR_LIMIT=40]">Cross-Device · Browse or import</string>
+    <string name="phone_subtitle_usb_tap_connect" description="Sidebar subtitle for companion phone connected via USB awaiting storage mount. [CHAR_LIMIT=40]">USB · Tap to connect storage</string>
+    <string name="phone_subtitle_usb_transfer" description="Sidebar subtitle for USB companion phone in file transfer mode. [CHAR_LIMIT=30]">USB file transfer</string>
+    <string name="phone_usb_default" description="Fallback device name for phone connected over USB. [CHAR_LIMIT=25]">USB Phone</string>
+    <string name="picker_accepts_desc" description="File picker banner description of acceptable MIME types or file kinds. [CHAR_LIMIT=60]">Accepts: {0}</string>
+    <string name="picker_ctrl_click_hint" description="File picker banner hint for multi-file selection. [CHAR_LIMIT=50]">Ctrl+click to select multiple files</string>
+    <string name="picker_double_click_hint" description="File picker banner hint for opening files. [CHAR_LIMIT=55]">Double-click to open, or select and confirm</string>
+    <string name="picker_file_name_label" description="Text field label for file name in Save File picker mode. [CHAR_LIMIT=20]">File name:</string>
+    <string name="picker_grant_folder_desc" description="Folder picker banner subtitle when requesting folder access. [CHAR_LIMIT=50]">Choose a folder to grant access to</string>
+    <string name="picker_grant_folder_title" description="Folder picker banner title when requesting folder access. [CHAR_LIMIT=35]">Grant folder access</string>
+    <string name="picker_open_file_title" description="Single file picker title banner. [CHAR_LIMIT=25]">Open file</string>
+    <string name="picker_open_files_title" description="Multiple file picker title banner. [CHAR_LIMIT=25]">Open files</string>
+    <string name="picker_save_file_in" description="Save file picker banner title. [CHAR_LIMIT=30]">Save file in:</string>
+    <string name="picker_select_file" description="Confirm button label in single file picker. [CHAR_LIMIT=20]">Select file</string>
+    <string name="picker_select_files_count" description="Confirm button label in multiple file picker with selection count. [CHAR_LIMIT=25]">Select ({0})</string>
+    <string name="picker_use_this_folder" description="Confirm button label in folder picker. [CHAR_LIMIT=25]">Use this folder</string>
+    <string name="preview_add_tag" description="Action label to apply color tag to file. [CHAR_LIMIT=30]">Add tag {0}</string>
+    <string name="preview_close" description="Button to close the details/preview pane. [CHAR_LIMIT=25]">Close preview</string>
+    <string name="preview_files" description="Preview pane row label showing count of files in selection. [CHAR_LIMIT=20]">Files</string>
+    <string name="preview_folders" description="Preview pane row label showing count of folders in selection. [CHAR_LIMIT=20]">Folders</string>
+    <string name="preview_location" description="Preview pane row label showing containing folder path. [CHAR_LIMIT=20]">Location</string>
+    <string name="preview_mode" description="Preview pane row label showing POSIX file mode bits. [CHAR_LIMIT=20]">Mode</string>
+    <string name="preview_modified" description="Preview pane row label showing last modified date and time. [CHAR_LIMIT=20]">Modified</string>
+    <string name="preview_multiple" description="Preview pane title when multiple items are selected. [CHAR_LIMIT=25]">Multiple items</string>
+    <string name="preview_pin" description="Preview pane action button to pin current folder/file to sidebar. [CHAR_LIMIT=30]">Pin to sidebar</string>
+    <string name="preview_remove_tag" description="Action label to remove color tag from file. [CHAR_LIMIT=30]">Remove tag {0}</string>
+    <string name="preview_summary" description="Preview pane section header for multi-item selection stats. [CHAR_LIMIT=20]">Summary</string>
+    <string name="preview_tag_cd" description="Content description for color tag chip. [CHAR_LIMIT=25]">Tag {0}</string>
+    <string name="preview_text_heading" description="Preview pane section heading for inline text file preview. [CHAR_LIMIT=20]">Preview</string>
+    <string name="preview_total_size" description="Preview pane row label showing combined size of selected files. [CHAR_LIMIT=25]">Total size</string>
+    <string name="preview_unpin" description="Preview pane action button to unpin current folder/file from sidebar. [CHAR_LIMIT=30]">Unpin from sidebar</string>
+    <string name="prop_copy_label" description="Accessibility action to copy property value to clipboard. [CHAR_LIMIT=30]">Copy {0}</string>
+    <string name="prop_label_kind" description="Row label in Properties dialog for item kind. [CHAR_LIMIT=20]">Kind</string>
+    <string name="prop_label_modified" description="Row label in Properties dialog for modification timestamp. [CHAR_LIMIT=20]">Modified</string>
+    <string name="prop_label_name" description="Row label in Properties dialog for file name. [CHAR_LIMIT=20]">Name</string>
+    <string name="prop_label_path" description="Row label in Properties dialog for file path. [CHAR_LIMIT=20]">Path</string>
+    <string name="quicklook_archive_cannot_read" description="Error message when Quick Look fails to parse an archive. [CHAR_LIMIT=60]">Cannot read archive: {0}</string>
+    <string name="quicklook_cannot_play_audio" description="Error message when Quick Look media player fails to play audio file. [CHAR_LIMIT=60]">Cannot play audio: {0}</string>
+    <string name="quicklook_cannot_read_file" description="Error message when Quick Look fails to read file contents. [CHAR_LIMIT=60]">Cannot read file: {0}</string>
+    <string name="quicklook_close" description="Button to close Quick Look modal preview dialog. [CHAR_LIMIT=25]">Close Quick Look</string>
+    <string name="quicklook_computing_checksums" description="Progress message in Quick Look binary inspector while hashing. [CHAR_LIMIT=40]">Computing checksums…</string>
+    <string name="quicklook_footer_hint" description="Quick Look modal footer shortcut navigation instructions. [CHAR_LIMIT=90]">Press Space or Esc to close · Left/Right to preview other items</string>
+    <string name="quicklook_next" description="Button to navigate to next file in Quick Look. [CHAR_LIMIT=20]">Next item</string>
+    <string name="quicklook_no_archive_preview" description="Message shown when an archive contains no previewable items. [CHAR_LIMIT=65]">Archive is empty or contents cannot be previewed</string>
+    <string name="quicklook_no_file_preview" description="Message shown in Quick Look when file format is not supported. [CHAR_LIMIT=60]">No preview available for this file type</string>
+    <string name="quicklook_no_remote_preview" description="Message shown when remote server file cannot be previewed directly. [CHAR_LIMIT=45]">Remote preview not available</string>
+    <string name="quicklook_open_folder" description="Action button in Quick Look folder view to open folder in main view. [CHAR_LIMIT=25]">Open folder</string>
+    <string name="quicklook_pause" description="Button to pause audio playback in Quick Look. [CHAR_LIMIT=20]">Pause audio</string>
+    <string name="quicklook_pdf_cannot_render" description="Error message when PDF page rendering fails. [CHAR_LIMIT=50]">Cannot render PDF page: {0}</string>
+    <string name="quicklook_play" description="Button to start audio playback in Quick Look. [CHAR_LIMIT=20]">Play audio</string>
+    <string name="quicklook_preview_truncated" description="Note indicating text file preview was truncated at size limit. [CHAR_LIMIT=45]">Preview truncated at {0}</string>
+    <string name="quicklook_previous" description="Button to navigate to previous file in Quick Look. [CHAR_LIMIT=20]">Previous item</string>
+    <string name="root_internal_storage" description="Breadcrumb and root path label for internal storage. [CHAR_LIMIT=25]">Internal storage</string>
+    <string name="saf_tip_generic_why_body" description="Explanation text in SAF mount tip dialog about why system file picker is shown. [CHAR_LIMIT=160]">Android requires explicit permission via the system file picker to grant Wayfinder access to external volumes and cloud drives.</string>
+    <string name="search_cat_all" description="Search category filter option for all file types. [CHAR_LIMIT=15]">All</string>
+    <string name="search_cat_apks" description="Search category filter option for Android application packages. [CHAR_LIMIT=20]">APKs</string>
+    <string name="search_cat_archives" description="Search category filter option for compressed archives. [CHAR_LIMIT=20]">Archives</string>
+    <string name="search_cat_audio" description="Search category filter option for audio files. [CHAR_LIMIT=15]">Audio</string>
+    <string name="search_cat_code" description="Search category filter option for source code files. [CHAR_LIMIT=15]">Code</string>
+    <string name="search_cat_docs" description="Search category filter option for document files. [CHAR_LIMIT=20]">Documents</string>
+    <string name="search_cat_images" description="Search category filter option for image and picture files. [CHAR_LIMIT=15]">Images</string>
+    <string name="search_cat_videos" description="Search category filter option for video and movie files. [CHAR_LIMIT=15]">Videos</string>
+    <string name="search_clear_filters" description="Button in search toolbar to reset all active search filters. [CHAR_LIMIT=25]">Clear filters</string>
+    <string name="search_found_so_far" description="Search count indicator while search is still actively scanning. [CHAR_LIMIT=35]">{0} found so far…</string>
+    <string name="search_mod_any" description="Search filter option for any modification date. [CHAR_LIMIT=20]">Any time</string>
+    <string name="search_mod_month" description="Search filter option for files modified within the past month. [CHAR_LIMIT=20]">Past month</string>
+    <string name="search_mod_today" description="Search filter option for files modified today. [CHAR_LIMIT=15]">Today</string>
+    <string name="search_mod_week" description="Search filter option for files modified within the past week. [CHAR_LIMIT=20]">Past week</string>
+    <string name="search_mod_year" description="Search filter option for files modified within the past year. [CHAR_LIMIT=20]">Past year</string>
+    <string name="search_scope_everywhere" description="Search scope option to search across all mounted storage. [CHAR_LIMIT=20]">Everywhere</string>
+    <string name="search_scope_folder" description="Search scope option to search only inside current directory. [CHAR_LIMIT=20]">This folder</string>
+    <string name="shortcuts_address_bar" description="Shortcut row label for Address Bar. [CHAR_LIMIT=25]">Address bar</string>
+    <string name="shortcuts_back_forward" description="Shortcut row label for Back / Forward. [CHAR_LIMIT=25]">Back / forward</string>
+    <string name="shortcuts_close_tab" description="Shortcut row label for Close Tab. [CHAR_LIMIT=25]">Close tab</string>
+    <string name="shortcuts_command_palette" description="Shortcut row label for Command Palette. [CHAR_LIMIT=25]">Command palette</string>
+    <string name="shortcuts_connect_server" description="Shortcut row label for Connect to Server. [CHAR_LIMIT=30]">Connect to server</string>
+    <string name="shortcuts_copy_move_other_pane" description="Shortcut row label for Copy / Move to Other Pane. [CHAR_LIMIT=35]">Copy / move to other pane</string>
+    <string name="shortcuts_cut_copy_paste" description="Shortcut row label for Cut / Copy / Paste. [CHAR_LIMIT=30]">Cut / copy / paste</string>
+    <string name="shortcuts_delete_perm" description="Shortcut row label for Delete / Delete Permanently. [CHAR_LIMIT=35]">Delete / delete permanently</string>
+    <string name="shortcuts_dialog_title" description="Dialog title for Keyboard Shortcuts reference dialog. [CHAR_LIMIT=30]">Keyboard shortcuts</string>
+    <string name="shortcuts_extend_selection" description="Shortcut row label for Extend Selection. [CHAR_LIMIT=30]">Extend selection</string>
+    <string name="shortcuts_goto_tab" description="Shortcut row label for Go to Tab 1-9. [CHAR_LIMIT=30]">Go to tab 1–9</string>
+    <string name="shortcuts_group_dual_pane" description="Shortcuts dialog group header for dual pane shortcuts. [CHAR_LIMIT=25]">Dual pane</string>
+    <string name="shortcuts_group_navigate" description="Shortcuts dialog group header for navigation shortcuts. [CHAR_LIMIT=20]">Navigate</string>
+    <string name="shortcuts_group_select_edit" description="Shortcuts dialog group header for select and edit shortcuts. [CHAR_LIMIT=30]">Select &amp; edit</string>
+    <string name="shortcuts_group_tabs" description="Shortcuts dialog group header for tab and window shortcuts. [CHAR_LIMIT=30]">Tabs &amp; windows</string>
+    <string name="shortcuts_group_view" description="Shortcuts dialog group header for view shortcuts. [CHAR_LIMIT=20]">View</string>
+    <string name="shortcuts_hidden_files" description="Shortcut row label for Hidden Files toggle. [CHAR_LIMIT=25]">Hidden files</string>
+    <string name="shortcuts_locate_in_tree" description="Shortcut row label for Locate Folder in Tree. [CHAR_LIMIT=35]">Locate folder in tree</string>
+    <string name="shortcuts_new_folder_file" description="Shortcut row label for New Folder / Text File. [CHAR_LIMIT=35]">New folder / text file</string>
+    <string name="shortcuts_new_tab" description="Shortcut row label for New Tab. [CHAR_LIMIT=25]">New tab</string>
+    <string name="shortcuts_next_prev_tab" description="Shortcut row label for Next/Previous Tab. [CHAR_LIMIT=30]">Next / previous tab</string>
+    <string name="shortcuts_open_in_new_tab" description="Shortcut row label for Open Folder in New Tab. [CHAR_LIMIT=35]">Open folder in new tab</string>
+    <string name="shortcuts_pin_unpin" description="Shortcut row label for Pin / Unpin Folder. [CHAR_LIMIT=35]">Pin / unpin folder</string>
+    <string name="shortcuts_quick_look" description="Shortcut row label for Quick Look Preview. [CHAR_LIMIT=30]">Quick Look preview</string>
+    <string name="shortcuts_rename_batch" description="Shortcut row label for Rename / Batch Rename. [CHAR_LIMIT=35]">Rename / batch rename</string>
+    <string name="shortcuts_reopen_tab" description="Shortcut row label for Reopen Closed Tab. [CHAR_LIMIT=30]">Reopen closed tab</string>
+    <string name="shortcuts_search" description="Shortcut row label for Search. [CHAR_LIMIT=20]">Search</string>
+    <string name="shortcuts_select_all_invert_none" description="Shortcut row label for Select All / Invert / None. [CHAR_LIMIT=35]">Select all / invert / none</string>
+    <string name="shortcuts_sidebar" description="Shortcut row label for Sidebar toggle. [CHAR_LIMIT=20]">Sidebar</string>
+    <string name="shortcuts_switch_active_pane" description="Shortcut row label for Switch Active Pane. [CHAR_LIMIT=30]">Switch active pane</string>
+    <string name="shortcuts_this_help" description="Shortcut row label for Help. [CHAR_LIMIT=20]">This help</string>
+    <string name="shortcuts_toggle_dual_pane" description="Shortcut row label for Toggle Dual Pane. [CHAR_LIMIT=30]">Toggle dual pane</string>
+    <string name="shortcuts_toggle_item" description="Shortcut row label for Toggle Item. [CHAR_LIMIT=25]">Toggle item</string>
+    <string name="shortcuts_ui_zoom" description="Shortcut row label for UI Zoom controls. [CHAR_LIMIT=40]">Interface zoom in / out / reset</string>
+    <string name="shortcuts_undo_redo" description="Shortcut row label for Undo / Redo. [CHAR_LIMIT=25]">Undo / redo</string>
+    <string name="shortcuts_up_one_level" description="Shortcut row label for Up One Level. [CHAR_LIMIT=25]">Up one level</string>
+    <string name="shortcuts_view_modes" description="Shortcut row label for View Modes switch. [CHAR_LIMIT=35]">Details / grid / columns</string>
+    <string name="shortcuts_zoom_grid" description="Shortcut row label for Zoom Grid. [CHAR_LIMIT=25]">Zoom grid</string>
+    <string name="sidebar_collapse" description="Sidebar action to collapse a section or tree node. [CHAR_LIMIT=20]">Collapse</string>
+    <string name="sidebar_collapse_target" description="Accessibility action to collapse specific folder in sidebar tree. [CHAR_LIMIT=30]">Collapse {0}</string>
+    <string name="sidebar_collapse_tree" description="Sidebar header action to collapse all open folders in tree. [CHAR_LIMIT=30]">Collapse folder tree</string>
+    <string name="sidebar_connect_to_server" description="Sidebar network section action to open connect dialog. [CHAR_LIMIT=30]">Connect to server…</string>
+    <string name="sidebar_disconnect_target" description="Accessibility action to disconnect a mounted network server. [CHAR_LIMIT=30]">Disconnect {0}</string>
+    <string name="sidebar_drive" description="Sidebar label for Google Drive account root. [CHAR_LIMIT=20]">Drive</string>
+    <string name="sidebar_empty_pinned_hint" description="Placeholder hint shown in Pinned section when no items are pinned. [CHAR_LIMIT=65]">Right-click a file or folder and choose “Pin to sidebar”</string>
+    <string name="sidebar_expand" description="Sidebar action to expand a section or tree node. [CHAR_LIMIT=20]">Expand</string>
+    <string name="sidebar_expand_target" description="Accessibility action to expand specific folder in sidebar tree. [CHAR_LIMIT=30]">Expand {0}</string>
+    <string name="sidebar_gb_free" description="Sidebar volume subtitle showing free storage in gigabytes. [CHAR_LIMIT=25]">{0} GB free</string>
+    <string name="sidebar_internal_storage" description="Sidebar storage volume label for internal flash storage. [CHAR_LIMIT=25]">Internal storage</string>
+    <string name="sidebar_linux_files" description="Sidebar storage volume label for ChromeOS Linux container. [CHAR_LIMIT=25]">Linux files</string>
+    <string name="sidebar_linux_mount_subtitle" description="Sidebar subtitle prompt when Linux container is unmounted. [CHAR_LIMIT=45]">Click to mount Linux development files</string>
+    <string name="sidebar_locate_active_folder" description="Sidebar header action to reveal current folder in tree. [CHAR_LIMIT=40]">Locate active folder (Alt+Shift+L)</string>
+    <string name="sidebar_managed_profile_subtitle" description="Sidebar subtitle for Android Enterprise managed profile volume. [CHAR_LIMIT=30]">Work profile storage</string>
+    <string name="sidebar_mount_cloud_saf" description="Sidebar network section action to mount cloud storage provider. [CHAR_LIMIT=40]">Mount cloud / external (SAF)…</string>
+    <string name="sidebar_mount_drive_folder" description="Sidebar Google Drive section action to mount folder via SAF. [CHAR_LIMIT=35]">Mount Drive folder (SAF)…</string>
+    <string name="sidebar_open_target" description="Accessibility action to open a sidebar item or file. [CHAR_LIMIT=30]">Open {0}</string>
+    <string name="sidebar_phone" description="Sidebar companion phone section item label. [CHAR_LIMIT=20]">Phone</string>
+    <string name="sidebar_sign_in_drive" description="Sidebar Google Drive section button when no account is signed in. [CHAR_LIMIT=35]">Sign in to Google Drive</string>
+    <string name="sidebar_sign_in_drive_subtitle" description="Sidebar Google Drive subtitle describing cloud sync features. [CHAR_LIMIT=45]">Browse and manage files in My Drive</string>
+    <string name="sidebar_unmount_target" description="Accessibility action to unmount a SAF or volume mount. [CHAR_LIMIT=30]">Unmount {0}</string>
+    <string name="sidebar_unpin_target" description="Accessibility action to remove item from pinned sidebar list. [CHAR_LIMIT=30]">Unpin {0}</string>
+    <string name="sort_ascending" description="Toolbar sort menu option for ascending order. [CHAR_LIMIT=20]">Ascending</string>
+    <string name="sort_by_column" description="Column header click action description to sort table by column. [CHAR_LIMIT=30]">Sort by {0}</string>
+    <string name="sort_descending" description="Toolbar sort menu option for descending order. [CHAR_LIMIT=20]">Descending</string>
+    <string name="sorted_ascending" description="Accessibility description for column currently sorted ascending. [CHAR_LIMIT=25]">sorted ascending</string>
+    <string name="sorted_descending" description="Accessibility description for column currently sorted descending. [CHAR_LIMIT=25]">sorted descending</string>
+    <string name="status_shortcut_hints" description="Status bar keyboard shortcut hints shown at bottom of window. [CHAR_LIMIT=90]">Ctrl+K Commands · Space Quick Look · F5 Dual pane · Alt+P Details</string>
+    <string name="tag_approved" description="Color tag label for Approved (green). [CHAR_LIMIT=20]">Approved</string>
+    <string name="tag_archive" description="Color tag label for Archive (grey). [CHAR_LIMIT=20]">Archive</string>
+    <string name="tag_build" description="Color tag label for Build (purple). [CHAR_LIMIT=20]">Build</string>
+    <string name="tag_review" description="Color tag label for Review (orange). [CHAR_LIMIT=20]">Review</string>
+    <string name="tag_spec" description="Color tag label for Spec (blue). [CHAR_LIMIT=20]">Spec</string>
+    <string name="tag_urgent" description="Color tag label for Urgent (red). [CHAR_LIMIT=20]">Urgent</string>
+    <string name="tag_wip" description="Color tag label for WIP (yellow). [CHAR_LIMIT=20]">WIP</string>
+    <string name="theme_dark" description="Theme mode option for dark theme. [CHAR_LIMIT=20]">Dark</string>
+    <string name="theme_light" description="Theme mode option for light theme. [CHAR_LIMIT=20]">Light</string>
+    <string name="theme_system" description="Theme mode option to follow system appearance. [CHAR_LIMIT=20]">System</string>
+    <string name="titlebar_close_tab_named" description="Accessibility action to close a specific named tab. [CHAR_LIMIT=30]">Close tab {0}</string>
+    <string name="titlebar_new_tab_shortcut" description="Tooltip / accessibility label for new tab button in tab bar. [CHAR_LIMIT=30]">New tab (Ctrl+T)</string>
+    <string name="titlebar_select_tab" description="Accessibility action to switch active tab to named tab. [CHAR_LIMIT=30]">Select tab {0}</string>
+    <string name="toast_app_accepts_single_file" description="Toast message when picking multiple files but receiving app only accepts one. [CHAR_LIMIT=60]">This app accepts only a single file</string>
+    <string name="toast_app_expects_format" description="Toast message when selected files do not match caller requested MIME type. [CHAR_LIMIT=50]">This app expects {0}</string>
+    <string name="toast_cancelled" description="Toast message when an in-progress file operation was cancelled. [CHAR_LIMIT=25]">Cancelled</string>
+    <string name="toast_cannot_copy_there" description="Toast message when copying items to a read-only or invalid destination. [CHAR_LIMIT=40]">Cannot copy to destination</string>
+    <string name="toast_cannot_create_file" description="Toast message when file creation fails. [CHAR_LIMIT=30]">Cannot create file</string>
+    <string name="toast_cannot_grant_folder" description="Toast message when SAF folder permission grant fails. [CHAR_LIMIT=60]">Cannot grant folder access: {0}</string>
+    <string name="toast_cannot_import_source" description="Toast message when importing external URI fails. [CHAR_LIMIT=35]">Cannot import source file</string>
+    <string name="toast_cannot_keep_access" description="Toast message when takePersistableUriPermission fails. [CHAR_LIMIT=50]">Cannot persist permission for this location</string>
+    <string name="toast_cannot_move_there" description="Toast message when moving items to a read-only or invalid destination. [CHAR_LIMIT=40]">Cannot move to destination</string>
+    <string name="toast_cannot_open_from_location" description="Toast message when opening a file from a virtual or unsupported location. [CHAR_LIMIT=55]">Cannot open {0} from this location</string>
+    <string name="toast_cannot_open_new_window" description="Toast message when multi-window launch is not supported by Android device. [CHAR_LIMIT=60]">Cannot open a new window on this device</string>
+    <string name="toast_cannot_read_name" description="Toast message when reading an imported input stream fails. [CHAR_LIMIT=40]">Cannot read {0}</string>
+    <string name="toast_cannot_save_file" description="Toast message when saving file in picker fails. [CHAR_LIMIT=50]">Cannot save file: {0}</string>
+    <string name="toast_cannot_share_from_location" description="Toast message when sharing files from a non-local location. [CHAR_LIMIT=50]">Cannot share files from this location</string>
+    <string name="toast_cannot_share_selected" description="Toast message when Android share sheet launch fails. [CHAR_LIMIT=50]">Cannot share selected files: {0}</string>
+    <string name="toast_copied_many_here_plural" description="Toast notification after successfully copying multiple items. [CHAR_LIMIT=45]">{0, plural, =1 {Copied # item here} other {Copied # items here}}</string>
+    <string name="toast_copied_single_here" description="Toast notification after successfully copying a single item. [CHAR_LIMIT=40]">Copied {0} here</string>
+    <string name="toast_different_kind_of_file" description="Fallback description of expected file type in picker toast. [CHAR_LIMIT=35]">a different kind of file</string>
+    <string name="toast_file_cannot_be_opened" description="Toast message when opening an unsafe or restricted file. [CHAR_LIMIT=50]">This file cannot be opened safely</string>
+    <string name="toast_file_cannot_be_shared" description="Toast message when sharing an unsafe or restricted file. [CHAR_LIMIT=50]">This file cannot be shared safely</string>
+    <string name="toast_imported_many_plural" description="Toast notification after importing dragged or shared items into destination folder. [CHAR_LIMIT=55]">{0, plural, =1 {Imported # item into {1}} other {Imported # items into {1}}}</string>
+    <string name="toast_item_already_exists" description="Toast message when creating a file or folder that already exists. [CHAR_LIMIT=50]">An item named “{0}” already exists</string>
+    <string name="toast_no_app_can_open" description="Toast message when no external application is registered for MIME type. [CHAR_LIMIT=55]">No installed app can open {0}</string>
+    <string name="toast_no_document_provider" description="Toast message when system file picker cannot be found. [CHAR_LIMIT=50]">No system document provider available</string>
+    <string name="toast_op_failed" description="Generic toast message when an asynchronous operation fails. [CHAR_LIMIT=50]">Operation failed: {0}</string>
+    <string name="toast_select_a_file" description="Toast message prompting user to select an item before confirming picker. [CHAR_LIMIT=30]">Select a file</string>
+    <string name="toast_select_items_to_copy" description="Toast message prompting user to make a selection before copying. [CHAR_LIMIT=35]">Select items to copy</string>
+    <string name="toast_select_items_to_move" description="Toast message prompting user to make a selection before moving. [CHAR_LIMIT=35]">Select items to move</string>
+    <string name="toast_select_local_files_to_share" description="Toast message prompting user to select files before sharing. [CHAR_LIMIT=40]">Select local files to share</string>
+    <string name="toast_unable_open_settings" description="Toast message when opening Android app settings intent fails. [CHAR_LIMIT=45]">Unable to open system settings</string>
+    <string name="toast_value_copied" description="Snackbar message when a path, hash, or text snippet was copied to clipboard. [CHAR_LIMIT=35]">Copied {0}</string>
+    <string name="toolbar_address_bar" description="Accessibility content description for the path breadcrumb bar. [CHAR_LIMIT=25]">Address bar</string>
+    <string name="toolbar_back" description="Toolbar navigation button tooltip for Back. [CHAR_LIMIT=25]">Back (Alt+Left)</string>
+    <string name="toolbar_clear_search" description="Accessibility button in search input to clear search text. [CHAR_LIMIT=20]">Clear search</string>
+    <string name="toolbar_dual_pane" description="Accessibility label for dual-pane toggle button. [CHAR_LIMIT=20]">Dual pane</string>
+    <string name="toolbar_forward" description="Toolbar navigation button tooltip for Forward. [CHAR_LIMIT=25]">Forward (Alt+Right)</string>
+    <string name="toolbar_more" description="Toolbar overflow menu button accessibility label. [CHAR_LIMIT=20]">More options</string>
+    <string name="toolbar_redo" description="Toolbar action button tooltip for Redo. [CHAR_LIMIT=20]">Redo (Ctrl+Y)</string>
+    <string name="toolbar_refresh_ctrl_r" description="Toolbar refresh button tooltip when in dual pane or desktop layout. [CHAR_LIMIT=25]">Refresh (Ctrl+R)</string>
+    <string name="toolbar_refresh_f5" description="Toolbar refresh button tooltip when in standard single pane layout. [CHAR_LIMIT=20]">Refresh (F5)</string>
+    <string name="toolbar_toggle_dual_pane" description="Tooltip / accessibility label for toggle dual-pane button. [CHAR_LIMIT=30]">Toggle dual pane</string>
+    <string name="toolbar_undo" description="Toolbar action button tooltip for Undo. [CHAR_LIMIT=20]">Undo (Ctrl+Z)</string>
+    <string name="toolbar_up" description="Toolbar navigation button tooltip for Up. [CHAR_LIMIT=20]">Up (Alt+Up)</string>
+    <string name="toolbar_view_columns" description="Toolbar view mode segmented button for Miller columns view. [CHAR_LIMIT=20]">Columns</string>
+    <string name="toolbar_view_details" description="Toolbar view mode segmented button for table details view. [CHAR_LIMIT=20]">Details</string>
+    <string name="toolbar_view_grid" description="Toolbar view mode segmented button for icon grid view. [CHAR_LIMIT=20]">Grid</string>
+    <string name="toolbar_view_list" description="Toolbar view mode segmented button for compact list view. [CHAR_LIMIT=20]">List</string>
+    <string name="type_ext_file" description="File type description format using uppercase file extension. [CHAR_LIMIT=25]">{0} file</string>
+    <string name="type_network_share" description="Item type description for network shares. [CHAR_LIMIT=25]">Network share</string>
+    <string name="type_server" description="Item type description for network host servers. [CHAR_LIMIT=20]">Server</string>
 </resources>

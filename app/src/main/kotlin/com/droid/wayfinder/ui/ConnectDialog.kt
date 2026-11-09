@@ -42,10 +42,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.droid.wayfinder.R
 import com.droid.wayfinder.data.ConnectConfig
 import com.droid.wayfinder.data.Protocol
 import com.droid.wayfinder.data.RemoteUri
@@ -59,6 +62,7 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun ConnectDialog(vm: BrowserViewModel, initial: ConnectConfig?, saved: List<SavedServer>, onDismiss: () -> Unit) {
+    val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     var protocol by remember { mutableStateOf(initial?.protocol ?: Protocol.SMB) }
     var address by remember { mutableStateOf(initial?.address?.rootPath.orEmpty()) }
@@ -111,7 +115,7 @@ fun ConnectDialog(vm: BrowserViewModel, initial: ConnectConfig?, saved: List<Sav
     AlertDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.widthIn(max = 560.dp).fillMaxWidth(),
-        title = { Text("Connect to Server") },
+        title = { Text(stringResource(R.string.connect_dialog_title)) },
         text = {
             Column(Modifier.heightIn(max = 560.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -122,7 +126,7 @@ fun ConnectDialog(vm: BrowserViewModel, initial: ConnectConfig?, saved: List<Sav
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Icon(Icons.Outlined.ErrorOutline, null, Modifier.size(16.dp), tint = cs.error)
                         Text(
-                            "Warning: Credentials and files are sent unencrypted over ${protocol.label}. Prefer $secureAlt.",
+                            stringResource(R.string.connect_unencrypted_warning, protocol.label, secureAlt),
                             style = MaterialTheme.typography.bodySmall,
                             color = cs.error,
                         )
@@ -130,46 +134,46 @@ fun ConnectDialog(vm: BrowserViewModel, initial: ConnectConfig?, saved: List<Sav
                 }
                 OutlinedTextField(
                     address, ::onAddress, Modifier.fillMaxWidth().focusRequester(fr), singleLine = true,
-                    label = { Text("Server address or UNC path") },
+                    label = { Text(stringResource(R.string.connect_field_server_or_unc)) },
                     placeholder = { Text("smb://nas/media  •  \\\\nas\\media  •  davs://cloud/dav  •  ftp://user@host:21/pub") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next),
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(host, { host = it.trim(); result = null }, Modifier.weight(1f), singleLine = true, label = { Text("Host") })
+                    OutlinedTextField(host, { host = it.trim(); result = null }, Modifier.weight(1f), singleLine = true, label = { Text(stringResource(R.string.connect_field_host)) })
                     OutlinedTextField(
                         port, { v -> port = v.filter { it.isDigit() }.take(5); result = null }, Modifier.width(110.dp), singleLine = true,
-                        label = { Text("Port") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        label = { Text(stringResource(R.string.connect_field_port)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     )
                 }
                 OutlinedTextField(
                     path, { path = it; result = null }, Modifier.fillMaxWidth(), singleLine = true,
-                    label = { Text(if (protocol == Protocol.SMB) "Share / folder (optional)" else "Base path (optional)") },
+                    label = { Text(stringResource(if (protocol == Protocol.SMB) R.string.connect_field_share_optional else R.string.connect_field_base_path_optional)) },
                     placeholder = { Text(if (protocol == Protocol.SMB) "media" else if (protocol.isWebDav) "remote.php/dav/files/me" else "pub") },
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Switch(guest, { guest = it; result = null })
-                    Text(if (protocol == Protocol.SMB) "  Guest" else "  Anonymous", style = MaterialTheme.typography.bodyMedium)
+                    Text("  " + stringResource(if (protocol == Protocol.SMB) R.string.connect_auth_guest else R.string.connect_auth_anonymous), style = MaterialTheme.typography.bodyMedium)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
-                        user, { user = it; result = null }, Modifier.weight(1f), enabled = !guest, singleLine = true, label = { Text("User name") },
+                        user, { user = it; result = null }, Modifier.weight(1f), enabled = !guest, singleLine = true, label = { Text(stringResource(R.string.dialog_smb_user_label)) },
                     )
                     OutlinedTextField(
                         pass, { pass = it; result = null }, Modifier.weight(1f), enabled = !guest, singleLine = true,
-                        label = { Text(if (initial?.user?.isNotEmpty() == true && initial?.remember == true) "Password (saved)" else "Password") },
+                        label = { Text(stringResource(if (initial?.user?.isNotEmpty() == true && initial?.remember == true) R.string.connect_field_password_saved else R.string.dialog_password_label)) },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     )
                 }
                 if (protocol == Protocol.SMB) OutlinedTextField(
-                    domain, { domain = it }, Modifier.fillMaxWidth(), enabled = !guest, singleLine = true, label = { Text("Domain / workgroup (optional)") },
+                    domain, { domain = it }, Modifier.fillMaxWidth(), enabled = !guest, singleLine = true, label = { Text(stringResource(R.string.dialog_domain_optional_label)) },
                 )
                 OutlinedTextField(
-                    alias, { alias = it }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("Sidebar name (optional)") },
+                    alias, { alias = it }, Modifier.fillMaxWidth(), singleLine = true, label = { Text(stringResource(R.string.connect_field_alias_optional)) },
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(rememberPw, { rememberPw = it }, enabled = !guest)
-                    Text("Remember credentials (stored encrypted)", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.connect_remember_credentials), style = MaterialTheme.typography.bodyMedium)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedButton(
@@ -179,12 +183,12 @@ fun ConnectDialog(vm: BrowserViewModel, initial: ConnectConfig?, saved: List<Sav
                                 testing = true
                                 result = null
                                 val r = vm.testConnection(config())
-                                result = r.fold({ "Connected ($it ms)" to true }, { (it.message ?: "Connection failed") to false })
+                                result = r.fold({ ctx.getString(R.string.connect_test_ok_ms, it) to true }, { (it.message ?: ctx.getString(R.string.connect_test_failed)) to false })
                                 testing = false
                             }
                         },
                         enabled = canGo && !testing,
-                    ) { Text("Test connection") }
+                    ) { Text(stringResource(R.string.connect_test_connection)) }
                     when {
                         testing -> CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                         result != null -> Row(verticalAlignment = Alignment.CenterVertically) {
@@ -199,7 +203,7 @@ fun ConnectDialog(vm: BrowserViewModel, initial: ConnectConfig?, saved: List<Sav
                     }
                 }
                 if (saved.isNotEmpty()) {
-                    Text("Saved servers", Modifier.padding(top = 4.dp), style = MaterialTheme.typography.labelLarge, color = cs.primary)
+                    Text(stringResource(R.string.connect_saved_servers), Modifier.padding(top = 4.dp), style = MaterialTheme.typography.labelLarge, color = cs.primary)
                     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         saved.forEach { sv ->
                             AssistChip({ fill(vm.connectConfigFor(sv)) }, label = { Text("${sv.label} (${sv.protocol.label})") })
@@ -208,7 +212,7 @@ fun ConnectDialog(vm: BrowserViewModel, initial: ConnectConfig?, saved: List<Sav
                 }
             }
         },
-        confirmButton = { TextButton({ vm.connectMount(config()) }, enabled = canGo) { Text("Connect & Mount") } },
-        dismissButton = { TextButton(onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton({ vm.connectMount(config()) }, enabled = canGo) { Text(stringResource(R.string.connect_action_connect_and_mount)) } },
+        dismissButton = { TextButton(onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }

@@ -125,9 +125,9 @@ fun TitleBar(vm: BrowserViewModel, s: AppState, onShowMenu: (androidx.compose.ui
                 }
                 Box(
                     Modifier.padding(start = 4.dp, bottom = 4.dp).size(32.dp).clip(CircleShape)
-                        .mouseGestures("add", role = Role.Button, onClickLabel = "New tab", onClick = { _, _, _ -> vm.newTab() }),
+                        .mouseGestures("add", role = Role.Button, onClickLabel = androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.action_new_tab), onClick = { _, _, _ -> vm.newTab() }),
                     contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Filled.Add, "New tab (Ctrl+T)", Modifier.size(20.dp), tint = cs.onSurfaceVariant) }
+                ) { Icon(Icons.Filled.Add, androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.titlebar_new_tab_shortcut), Modifier.size(20.dp), tint = cs.onSurfaceVariant) }
             }
         }
     }
@@ -140,6 +140,7 @@ private fun TabItem(
 ) {
     val cs = MaterialTheme.colorScheme
     val selected = tab.id == s.activeId
+    val tabTitle = s.localizedTitleOf(tab.path)
     val hover = remember { MutableInteractionSource() }
     val hovered by hover.collectIsHoveredAsState()
     val drag = LocalDrag.current
@@ -174,7 +175,7 @@ private fun TabItem(
                 tab.id,
                 role = Role.Tab,
                 selected = selected,
-                onClickLabel = "Select tab ${s.titleOf(tab.path)}",
+                onClickLabel = androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.titlebar_select_tab, tabTitle),
                 onClick = { _, _, _ -> vm.selectTab(tab.id) },
                 onMiddle = { vm.closeTab(tab.id) },
                 onSecondary = { onShowMenu(it, tabMenu(vm, tab.id)) },
@@ -195,7 +196,7 @@ private fun TabItem(
             }
             if (width > 72.dp) Icon(icon, null, Modifier.size(18.dp), tint = if (selected) cs.primary else cs.onSurfaceVariant)
             Text(
-                s.titleOf(tab.path), Modifier.weight(1f).padding(horizontal = if (width > 72.dp) 8.dp else 0.dp),
+                tabTitle, Modifier.weight(1f).padding(horizontal = if (width > 72.dp) 8.dp else 0.dp),
                 style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 color = if (selected) cs.onSurface else cs.onSurfaceVariant,
             )
@@ -204,11 +205,11 @@ private fun TabItem(
                     Modifier.size(28.dp).clip(CircleShape).mouseGestures(
                         "close${tab.id}",
                         role = Role.Button,
-                        onClickLabel = "Close tab ${s.titleOf(tab.path)}",
+                        onClickLabel = androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.titlebar_close_tab_named, tabTitle),
                         onClick = { _, _, _ -> vm.closeTab(tab.id) },
                     ),
                     contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Filled.Close, "Close tab", Modifier.size(14.dp), tint = cs.onSurfaceVariant) }
+                ) { Icon(Icons.Filled.Close, androidx.compose.ui.res.stringResource(com.droid.wayfinder.R.string.action_close_tab), Modifier.size(14.dp), tint = cs.onSurfaceVariant) }
             } else Box(Modifier.size(28.dp))
         }
     }
