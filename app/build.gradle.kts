@@ -20,11 +20,29 @@ android {
     // Pure Kotlin/JVM app: no native libs, so the single APK runs on x86_64 and arm64-v8a.
   }
 
+  signingConfigs {
+    val ksFile = file(System.getenv("ANDROID_RELEASE_KEYSTORE_PATH") ?: "release.keystore")
+    if (ksFile.exists()) {
+      create("release") {
+        storeFile = ksFile
+        storePassword = System.getenv("ANDROID_RELEASE_KEYSTORE_PASSWORD") ?: "android"
+        keyAlias = System.getenv("ANDROID_RELEASE_KEY_ALIAS") ?: "release"
+        keyPassword = System.getenv("ANDROID_RELEASE_KEY_PASSWORD") ?: "android"
+        enableV1Signing = true
+        enableV2Signing = true
+        enableV3Signing = true
+      }
+    }
+  }
+
   buildTypes {
     release {
       isMinifyEnabled = true
       isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+      signingConfigs.findByName("release")?.let {
+        signingConfig = it
+      }
     }
   }
   compileOptions {
