@@ -680,4 +680,41 @@
     <string name="empty_trash_body">删除的文件将显示在此处，直到您清空回收站。</string>
     <string name="empty_folder_body">右键点击或按 Ctrl+Shift+N 创建新文件夹。</string>
     <string name="toast_allow_install_unknown_apps">请允许 Wayfinder 安装未知应用以安装此程序</string>
+    <string name="menu_status_bar">状态栏</string>
+    <string name="palette_toggle_app_status_bar">切换状态栏</string>
+    <string name="palette_app_status_bar_desc">显示或隐藏底部项目计数栏</string>
+    <string name="menu_hide_status_bar">隐藏系统状态栏</string>
+    <string name="palette_hide_status_bar">隐藏系统状态栏</string>
+    <string name="palette_show_status_bar">显示系统状态栏</string>
+    <string name="palette_status_bar_desc">切换 Android 系统状态栏可见性</string>
+    <string name="toast_status_bar_hidden">系统状态栏已隐藏</string>
+    <string name="toast_status_bar_shown">系统状态栏已显示</string>
+    <string name="nav_open_sidebar">打开导航抽屉</string>
+    <string name="nav_close_sidebar">关闭导航抽屉</string>
+    <string name="nav_drawer_label">导航抽屉</string>
+    <string name="action_close_search">关闭搜索</string>
+    <string name="drawer_app_title">Wayfinder</string>
+
+    <!-- Microsoft OneDrive 集成 -->
+    <string name="onedrive_section">OneDrive</string>
+    <string name="onedrive_add_account">添加 Microsoft OneDrive 账户</string>
+    <string name="onedrive_sign_in_prompt">登录 OneDrive…</string>
+    <string name="onedrive_sign_in_subtitle">个人 (@outlook.com) 或工作/学校账户</string>
+    <string name="onedrive_dialog_title">连接 Microsoft OneDrive</string>
+    <string name="onedrive_dialog_subtitle">个人 (@outlook.com / @live.com) 或工作/学校 (Microsoft 365)</string>
+    <string name="onedrive_tab_browser">浏览器登录（推荐）</string>
+    <string name="onedrive_tab_device_code">手机/设备代码登录</string>
+    <string name="onedrive_label_optional">边栏标签（可选）</string>
+    <string name="onedrive_client_id_label">Entra 应用程序 (客户端) ID</string>
+    <string name="onedrive_action_sign_in_browser">使用 Microsoft 账户登录</string>
+    <string name="onedrive_action_start_device_code">获取登录代码</string>
+    <string name="onedrive_action_open_web">在 OneDrive 网页端打开</string>
+    <string name="onedrive_action_refresh_quota">刷新存储配额</string>
+    <string name="onedrive_action_sign_out">退出 OneDrive</string>
+    <string name="palette_connect_onedrive">连接 Microsoft OneDrive…</string>
+    <string name="palette_connect_onedrive_desc">挂载个人或 Microsoft 365 OneDrive 账户</string>
+    <string name="palette_kind_onedrive">OneDrive</string>
+    <string name="toast_onedrive_connected">已连接 %1$s</string>
+    <string name="toast_onedrive_signed_out">已退出 %1$s</string>
+    <string name="badge_beta">Beta</string>
 </resources>

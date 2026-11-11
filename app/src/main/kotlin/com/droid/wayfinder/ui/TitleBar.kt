@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.captionBar
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,9 +24,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.filled.Add
@@ -56,13 +59,46 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import com.droid.wayfinder.data.FsPath
 
-data class CaptionMetrics(val height: Dp, val start: Dp, val end: Dp)
+internal val DESKTOP_CAPTION_DRAG_RESERVE = 48.dp
+
+data class CaptionMetrics(
+    val height: Dp,
+    val start: Dp,
+    val end: Dp,
+    val topInset: Dp = 0.dp,
+    val hasDesktopCaption: Boolean = false,
+)
+
+internal fun computeCaptionMetrics(
+    capTopPx: Int,
+    statusTopPx: Int,
+    cutoutTopPx: Int = 0,
+    startPx: Int,
+    endPx: Int,
+    density: Density,
+): CaptionMetrics = with(density) {
+    val minCaptionH = (44f * density.fontScale.coerceIn(1f, 1.35f)).dp
+    // When no desktop caption bar is active (e.g. phone/tablet fullscreen with DeX disabled) and the
+    // system status bar is visible, reserve max(statusTopPx, cutoutTopPx) above the tab strip so clock,
+    // notification icons, and top camera cutouts never overlap the tabs. When statusBars are hidden
+    // (statusTopPx == 0), topInset collapses to 0.dp so the tab strip reclaims the top edge.
+    val topInset = if (capTopPx == 0 && statusTopPx > 0) maxOf(statusTopPx, cutoutTopPx).toDp() else 0.dp
+    val height = if (capTopPx == 0 && statusTopPx > 0) topInset + minCaptionH else max(minCaptionH, capTopPx.toDp())
+    CaptionMetrics(
+        height = height,
+        start = startPx.toDp(),
+        end = endPx.toDp(),
+        topInset = topInset,
+        hasDesktopCaption = capTopPx > 0,
+    )
+}
 
 /**
  * Measures the system caption (title) bar so that our tab strip can live inside it, leaving room for
@@ -75,8 +111,9 @@ fun rememberCaptionMetrics(): CaptionMetrics {
     val layoutDir = LocalLayoutDirection.current
     val capTop = WindowInsets.captionBar.getTop(density)
     val statusTop = WindowInsets.statusBars.getTop(density)
+    val cutoutTop = WindowInsets.displayCutout.getTop(density)
     val widthPx = LocalWindowInfo.current.containerSize.width
-    return remember(capTop, statusTop, widthPx, layoutDir) {
+    return remember(capTop, statusTop, cutoutTop, widthPx, layoutDir) {
         var left = 0
         var right = 0
         if (capTop > 0) {
@@ -93,29 +130,51 @@ fun rememberCaptionMetrics(): CaptionMetrics {
                 val fallbackPx = with(density) { 140.dp.roundToPx() }
                 if (layoutDir == LayoutDirection.Rtl) left = fallbackPx else right = fallbackPx
             }
+        } else if (statusTop == 0 && widthPx > 0) {
+            // When the system status bar is hidden in fullscreen mode, clear any corner camera cutout
+            // horizontally so tabs on the top edge never overlap a left/right punch-hole.
+            val topBandPx = with(density) { 44.dp.roundToPx() }
+            val cutoutRects = view.rootWindowInsets?.displayCutout?.boundingRects.orEmpty()
+            for (r in cutoutRects) {
+                if (r.isEmpty || r.top >= topBandPx) continue
+                if (r.left < widthPx * 0.25f) left = maxOf(left, r.right)
+                else if (r.right > widthPx * 0.75f) right = maxOf(right, widthPx - r.left)
+            }
         }
         val startPx = if (layoutDir == LayoutDirection.Rtl) right else left
         val endPx = if (layoutDir == LayoutDirection.Rtl) left else right
-        val minCaptionH = (44f * density.fontScale.coerceIn(1f, 1.35f)).dp
-        with(density) { CaptionMetrics(max(minCaptionH, maxOf(capTop, statusTop).toDp()), startPx.toDp(), endPx.toDp()) }
+        computeCaptionMetrics(capTop, statusTop, cutoutTop, startPx, endPx, density)
     }
 }
 
 @Composable
-fun TitleBar(vm: BrowserViewModel, s: AppState, onShowMenu: (androidx.compose.ui.geometry.Offset, List<MenuEntry>) -> Unit) {
-    val cap = rememberCaptionMetrics()
+fun TitleBar(
+    vm: BrowserViewModel,
+    s: AppState,
+    captionMetricsOverride: CaptionMetrics? = null,
+    onShowMenu: (androidx.compose.ui.geometry.Offset, List<MenuEntry>) -> Unit,
+) {
+    val cap = captionMetricsOverride ?: rememberCaptionMetrics()
     val cs = MaterialTheme.colorScheme
     Row(
         Modifier.fillMaxWidth().height(cap.height).background(cs.surfaceContainerHighest)
-            .padding(start = maxOf(cap.start, 8.dp), end = cap.end),
+            .padding(top = cap.topInset, start = maxOf(cap.start, 8.dp), end = cap.end),
         verticalAlignment = Alignment.Bottom,
     ) {
         BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
+            // Reserve a dedicated un-excluded drag-handle zone before the desktop window controls so opening
+            // 5+ tabs never lets the tab strip consume 100% of the caption bar and starve window dragging.
+            val dragReserve = if (cap.hasDesktopCaption) (maxWidth - 96.dp).coerceIn(0.dp, DESKTOP_CAPTION_DRAG_RESERVE) else 0.dp
+            val stripMaxWidth = (maxWidth - dragReserve).coerceAtLeast(0.dp)
             val addBtn = 40.dp
             val n = s.tabs.size
-            val tabW = ((maxWidth - addBtn - 8.dp) / n).coerceIn(52.dp, 220.dp)
+            val tabW = ((stripMaxWidth - addBtn - 8.dp) / n).coerceIn(52.dp, 220.dp)
+            // Register the interactive tab strip and "+" button as a system-gesture exclusion rect
+            // so Android desktop / Googlebook WM Shell treats clicks here as app header gestures
+            // rather than pilfering primary mouse-down events for caption drag/maximize, while
+            // leaving empty titlebar space to the right un-excluded for window drag-to-move.
             Row(
-                Modifier.fillMaxHeight().horizontalScroll(rememberScrollState()).padding(top = 6.dp),
+                Modifier.widthIn(max = stripMaxWidth).systemGestureExclusion().fillMaxHeight().horizontalScroll(rememberScrollState()).padding(top = 6.dp),
                 verticalAlignment = Alignment.Bottom,
             ) {
                 s.tabs.forEach { tab ->
@@ -184,17 +243,23 @@ private fun TabItem(
         contentAlignment = Alignment.CenterStart,
     ) {
         Row(Modifier.padding(start = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            val icon = when {
-                com.droid.wayfinder.data.SystemDocumentsBridge.isPhonePath(tab.path) -> if (s.phoneConnected || FsPath.isDoc(tab.path)) Icons.Outlined.Smartphone else pinIcon(tab.path)
-                tab.path == FsPath.SMB_ROOT || FsPath.isRemote(tab.path) -> Icons.Outlined.Dns
-                tab.path == FsPath.TRASH_ROOT -> Icons.Outlined.Delete
-                tab.path == FsPath.RECENTS_ROOT -> Icons.Outlined.History
-                tab.path == FsPath.STARRED_ROOT -> Icons.Outlined.StarOutline
-                FsPath.tagOf(tab.path) != null -> Icons.AutoMirrored.Outlined.Label
-                FsPath.isZip(tab.path) -> Icons.Outlined.FolderZip
-                else -> pinIcon(tab.path)
+            if (width > 72.dp) {
+                if (FsPath.isOneDrive(tab.path)) {
+                    OneDriveIcon(Modifier.size(18.dp))
+                } else {
+                    val icon = when {
+                        com.droid.wayfinder.data.SystemDocumentsBridge.isPhonePath(tab.path) -> if (s.phoneConnected || FsPath.isDoc(tab.path)) Icons.Outlined.Smartphone else pinIcon(tab.path)
+                        tab.path == FsPath.SMB_ROOT || FsPath.isRemote(tab.path) -> Icons.Outlined.Dns
+                        tab.path == FsPath.TRASH_ROOT -> Icons.Outlined.Delete
+                        tab.path == FsPath.RECENTS_ROOT -> Icons.Outlined.History
+                        tab.path == FsPath.STARRED_ROOT -> Icons.Outlined.StarOutline
+                        FsPath.tagOf(tab.path) != null -> Icons.AutoMirrored.Outlined.Label
+                        FsPath.isZip(tab.path) -> Icons.Outlined.FolderZip
+                        else -> pinIcon(tab.path)
+                    }
+                    Icon(icon, null, Modifier.size(18.dp), tint = if (selected) cs.primary else cs.onSurfaceVariant)
+                }
             }
-            if (width > 72.dp) Icon(icon, null, Modifier.size(18.dp), tint = if (selected) cs.primary else cs.onSurfaceVariant)
             Text(
                 tabTitle, Modifier.weight(1f).padding(horizontal = if (width > 72.dp) 8.dp else 0.dp),
                 style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis,

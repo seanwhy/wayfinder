@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.captionBar
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -87,12 +89,14 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.droid.wayfinder.R
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.outlined.AppRegistration
+import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Contrast
 import androidx.compose.material.icons.outlined.FindInPage
 import androidx.compose.material.icons.outlined.FolderZip
@@ -120,7 +124,7 @@ data class PaletteItem(
 )
 
 /** Every command the palette offers (labels mirror the menus and the F1 list). */
-fun paletteCommands(vm: BrowserViewModel, s: AppState): List<PaletteItem> {
+fun paletteCommands(vm: BrowserViewModel, s: AppState, hasDesktopCaption: Boolean = false): List<PaletteItem> {
     val tab = s.active
     fun c(name: String, desc: String, shortcut: String?, icon: ImageVector, action: () -> Unit) = PaletteItem(name, desc, shortcut, icon, action)
     return buildList {
@@ -158,6 +162,7 @@ fun paletteCommands(vm: BrowserViewModel, s: AppState): List<PaletteItem> {
         add(c(vm.str(R.string.palette_show_hidden_files), if (s.showHidden) vm.str(R.string.palette_currently_shown) else vm.str(R.string.palette_currently_hidden), "Ctrl+H", Icons.Outlined.Visibility) { vm.toggleHidden() })
         add(c(vm.str(R.string.palette_toggle_sidebar), vm.str(R.string.palette_toggle_sidebar_desc), "Ctrl+\\", Icons.AutoMirrored.Outlined.ViewSidebar) { vm.toggleSidebar() })
         add(c(vm.str(R.string.palette_toggle_details_pane), vm.str(R.string.palette_toggle_details_pane_desc), "Alt+P", Icons.AutoMirrored.Outlined.ViewSidebar) { vm.togglePreview() })
+        add(c(vm.str(R.string.palette_toggle_app_status_bar), vm.str(R.string.palette_app_status_bar_desc), null, Icons.AutoMirrored.Outlined.ViewSidebar) { vm.toggleStatusBar() })
         add(c(vm.str(R.string.action_back), vm.str(R.string.palette_back_desc), "Alt+←", Icons.AutoMirrored.Outlined.ArrowBack) { vm.back() })
         add(c(vm.str(R.string.palette_forward), vm.str(R.string.palette_forward_desc), "Alt+→", Icons.AutoMirrored.Outlined.ArrowForward) { vm.forward() })
         add(c(vm.str(R.string.palette_up_one_level), vm.str(R.string.palette_up_one_level_desc), "Alt+↑", Icons.Outlined.ArrowUpward) { vm.up() })
@@ -174,6 +179,7 @@ fun paletteCommands(vm: BrowserViewModel, s: AppState): List<PaletteItem> {
         }
         add(c(pinLabel, vm.str(R.string.palette_pin_desc), "Ctrl+B", Icons.Outlined.PushPin) { vm.togglePins(effectivePinTargets) })
         add(c(vm.str(R.string.palette_connect_server), vm.str(R.string.palette_connect_server_desc), "Ctrl+Shift+K", Icons.Outlined.Dns) { vm.showConnectDialog() })
+        add(c(vm.str(R.string.palette_connect_onedrive), vm.str(R.string.palette_connect_onedrive_desc), null, Icons.Outlined.Cloud) { vm.showConnectOneDriveDialog() })
         add(c(vm.str(R.string.palette_mount_provider), vm.str(R.string.palette_mount_provider_desc), null, Icons.Outlined.Dns) { vm.requestMountSaf() })
         add(c(vm.str(R.string.palette_network), vm.str(R.string.palette_network_desc), null, Icons.Outlined.Dns) { vm.navigate(FsPath.SMB_ROOT) })
         add(c(vm.str(R.string.nav_trash), vm.str(R.string.palette_trash_desc), null, Icons.Outlined.Delete) { vm.navigate(FsPath.TRASH_ROOT) })
@@ -215,6 +221,9 @@ fun paletteCommands(vm: BrowserViewModel, s: AppState): List<PaletteItem> {
         }
         add(c(if (s.tagsColumn) vm.str(R.string.palette_hide_tags_column) else vm.str(R.string.palette_show_tags_column), vm.str(R.string.palette_details_column_desc), null, Icons.AutoMirrored.Outlined.Label) { vm.toggleTagsColumn() })
         add(c(if (s.permsColumn) vm.str(R.string.palette_hide_perms_column) else vm.str(R.string.palette_show_perms_column), vm.str(R.string.palette_details_column_desc), null, Icons.Outlined.Lock) { vm.togglePermsColumn() })
+        if (!hasDesktopCaption) {
+            add(c(if (s.hideStatusBar) vm.str(R.string.palette_show_status_bar) else vm.str(R.string.palette_hide_status_bar), vm.str(R.string.palette_status_bar_desc), null, Icons.Outlined.Visibility) { vm.toggleHideStatusBar() })
+        }
         val one = tab.selectedEntries(s.showHidden).singleOrNull()
         if (one != null && !one.isDir) add(c(vm.str(R.string.action_open_with), vm.str(R.string.palette_open_with_desc, one.name), null, Icons.Outlined.AppRegistration) { vm.openWith() })
         if (one != null && vm.isBrowsableArchive(one)) {
@@ -257,6 +266,7 @@ fun paletteFolders(vm: BrowserViewModel, s: AppState): List<PaletteItem> {
     }
     s.pins.forEach { add(it, vm.str(R.string.pinned_section)) }
     s.roots.forEach { add(it.path, vm.str(R.string.palette_kind_storage)) }
+    s.oneDriveAccounts.forEach { add(it.rootPath, vm.str(R.string.palette_kind_onedrive)) }
     if (s.phoneConnected) add(FsPath.PHONE_ROOT, vm.str(R.string.quick_access_section))
     s.recentFolders.forEach { add(it, vm.str(R.string.nav_recents)) }
     s.active.visible(s.showHidden).filter { it.isDir && !it.isServer }.forEach { add(it.path, vm.str(R.string.palette_kind_current_folder)) }
@@ -266,12 +276,29 @@ fun paletteFolders(vm: BrowserViewModel, s: AppState): List<PaletteItem> {
 @Composable
 fun CommandPalette(vm: BrowserViewModel, s: AppState) {
     val cs = MaterialTheme.colorScheme
+    val hasDesktopCaption = WindowInsets.captionBar.getTop(LocalDensity.current) > 0
     var query by remember { mutableStateOf("") }
     var index by remember { mutableIntStateOf(0) }
     val fr = remember { FocusRequester() }
     val listState = rememberLazyListState()
-    val commands = remember(s.active.path, s.active.entries, s.active.selection, s.dualPane, s.pins, s.recentFolders, s.showHidden, s.theme, s.zoom, s.tagsColumn, s.permsColumn) {
-        paletteCommands(vm, s) to paletteFolders(vm, s)
+    val commands = remember(
+        s.active.path,
+        s.active.entries,
+        s.active.selection,
+        s.dualPane,
+        s.pins,
+        s.oneDriveAccounts,
+        s.recentFolders,
+        s.showHidden,
+        s.theme,
+        s.zoom,
+        s.tagsColumn,
+        s.permsColumn,
+        s.statusBarVisible,
+        s.hideStatusBar,
+        hasDesktopCaption,
+    ) {
+        paletteCommands(vm, s, hasDesktopCaption) to paletteFolders(vm, s)
     }
     val results = remember(query, commands) {
         val (cmds, folders) = commands

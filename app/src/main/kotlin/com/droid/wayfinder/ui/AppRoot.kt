@@ -19,9 +19,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -29,6 +31,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -36,14 +40,18 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.DriveFileMove
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -67,6 +75,7 @@ import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
@@ -83,10 +92,14 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.droid.wayfinder.MainActivity
+import com.droid.wayfinder.R
 import com.droid.wayfinder.data.FsPath
 import com.droid.wayfinder.data.ViewMode
 import java.io.File
@@ -114,6 +127,7 @@ fun AppRoot(vm: BrowserViewModel) {
     val fm = LocalFocusManager.current
     var lastPointer by remember { mutableStateOf(Offset(400f, 300f)) }
     var typeBuffer by remember { mutableStateOf("") }
+    var isCompactViewport by remember { mutableStateOf(false) }
     var typeTime by remember { mutableStateOf(0L) }
 
     // "Mount Cloud / SAF…": the system document-tree picker; access is persisted by the view model.
@@ -150,7 +164,7 @@ fun AppRoot(vm: BrowserViewModel) {
     LaunchedEffect(Unit) {
         vm.events.collect { e ->
             when (e) {
-                is UiEvent.OpenFile -> openWithSystem(ctx, e.path, e.chooser)
+                is UiEvent.OpenFile -> openWithSystem(ctx, e.path, e.chooser, e.uri)
                 is UiEvent.Share -> shareFiles(ctx, e.paths)
                 is UiEvent.CopyText -> {
                     ctx.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText(e.what, e.text))
@@ -158,6 +172,17 @@ fun AppRoot(vm: BrowserViewModel) {
                     snackbar.showSnackbar(ctx.getString(com.droid.wayfinder.R.string.toast_value_copied, e.what), duration = SnackbarDuration.Short)
                 }
                 is UiEvent.NewWindow -> openNewWindow(ctx, e.path)
+                is UiEvent.OpenExternalUrl -> {
+                    val uri = runCatching { android.net.Uri.parse(e.url) }.getOrNull()
+                    val scheme = uri?.scheme?.lowercase()
+                    if (uri != null && (scheme == "https" || scheme == "http")) {
+                        try {
+                            ctx.startActivity(Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                        } catch (_: Exception) {
+                            snackbar.showSnackbar("No browser available to open ${e.url}", duration = SnackbarDuration.Short)
+                        }
+                    }
+                }
                 UiEvent.RequestBluetoothPermission -> if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                     bluetoothPermissionLauncher.launch(android.Manifest.permission.BLUETOOTH_CONNECT)
                 } else {
@@ -289,7 +314,7 @@ fun AppRoot(vm: BrowserViewModel) {
                 k == Key.H -> { vm.toggleHidden(); return true }
                 k == Key.R && shift -> { vm.requestBatchRename(); return true }
                 k == Key.R -> { vm.refresh(); return true }
-                k == Key.Backslash -> { vm.toggleSidebar(); return true }
+                k == Key.Backslash -> { if (isCompactViewport) vm.toggleCompactSidebar() else vm.toggleSidebar(); return true }
                 k == Key.B -> {
                     val targets = tab.selectedEntries(st.showHidden).filter { !it.isServer && !it.isShare && !FsPath.isZip(it.path) }.map { it.path }
                     if (targets.isNotEmpty()) vm.togglePins(targets) else vm.togglePin(tab.path)
@@ -340,7 +365,7 @@ fun AppRoot(vm: BrowserViewModel) {
             Key.Spacebar -> vm.toggleQuickLook()
             Key.Backspace, Key.Back -> vm.back()
             Key.Forward -> vm.forward()
-            Key.Escape -> if (tab.selection.isNotEmpty()) vm.clearSelection() else if (tab.query.isNotEmpty()) vm.setQuery("") else return false
+            Key.Escape -> if (st.compactSidebarOpen) vm.setCompactSidebarOpen(false) else if (tab.selection.isNotEmpty()) vm.clearSelection() else if (tab.query.isNotEmpty()) vm.setQuery("") else return false
             Key.DirectionDown -> vm.moveFocus(cols, shift)
             Key.DirectionUp -> vm.moveFocus(-cols, shift)
             Key.DirectionRight -> if (columns) vm.columnEnter() else if (cols > 1) vm.moveFocus(1, shift) else return false
@@ -382,14 +407,24 @@ fun AppRoot(vm: BrowserViewModel) {
                     }
                 },
         ) {
-            Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))) {
+            Column(
+                Modifier.fillMaxSize().windowInsetsPadding(
+                    WindowInsets.systemBars.union(WindowInsets.displayCutout)
+                        .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
+                ),
+            ) {
                 Box(Modifier.reclaimFocus(vm, fm, rootFocus)) {
                     TitleBar(vm, s) { off, items -> menu.show(off, items) }
                 }
                 s.picker?.let { PickerBanner(vm, s) }
                 Toolbar(vm, s)
                 BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().reclaimFocus(vm, fm, rootFocus)) {
-                    val showSidebar = s.sidebarVisible && maxWidth >= 600.dp
+                    val compact = maxWidth < 600.dp
+                    SideEffect { isCompactViewport = compact }
+                    LaunchedEffect(compact) {
+                        if (!compact && s.compactSidebarOpen) vm.setCompactSidebarOpen(false)
+                    }
+                    val showSidebar = s.sidebarVisible && !compact
                     val showPreview = s.previewVisible && maxWidth >= 900.dp
                     Row(Modifier.fillMaxSize().padding(end = 8.dp, bottom = 8.dp)) {
                         if (showSidebar) {
@@ -404,12 +439,59 @@ fun AppRoot(vm: BrowserViewModel) {
                     }
                 }
             }
+            if (isCompactViewport && s.compactSidebarOpen) {
+                CompactSidebarDrawer(vm, s)
+            }
             QuickLook(vm, s)
             if (s.paletteOpen) CommandPalette(vm, s)
             MenuHost(menu)
             Dialogs(vm, s)
             SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 48.dp))
             if (drag.active) DragGhost(drag, s)
+        }
+    }
+}
+
+@Composable
+private fun CompactSidebarDrawer(vm: BrowserViewModel, s: AppState) {
+    val cs = MaterialTheme.colorScheme
+    val dismissInteraction = remember { MutableInteractionSource() }
+    val drawerA11yLabel = stringResource(R.string.nav_drawer_label)
+    BackHandler(enabled = true) { vm.setCompactSidebarOpen(false) }
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val drawerWidth = minOf(304.dp, maxWidth * 0.86f)
+        Box(
+            Modifier.fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.38f))
+                .clickable(interactionSource = dismissInteraction, indication = null) {
+                    vm.setCompactSidebarOpen(false)
+                },
+        )
+        Surface(
+            modifier = Modifier.width(drawerWidth).fillMaxHeight().semantics { contentDescription = drawerA11yLabel },
+            shape = RoundedCornerShape(topEnd = 20.dp, bottomEnd = 20.dp),
+            color = cs.surfaceContainerLow,
+            tonalElevation = 2.dp,
+            shadowElevation = 8.dp,
+        ) {
+            Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars)) {
+                Row(
+                    Modifier.fillMaxWidth().padding(start = 18.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        stringResource(R.string.drawer_app_title),
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = cs.onSurface,
+                    )
+                    IconButton({ vm.setCompactSidebarOpen(false) }, Modifier.size(40.dp)) {
+                        Icon(Icons.Outlined.Close, stringResource(R.string.nav_close_sidebar))
+                    }
+                }
+                HorizontalDivider(color = cs.outlineVariant.copy(alpha = 0.5f))
+                Sidebar(vm, s, Modifier.weight(1f).fillMaxWidth().padding(vertical = 6.dp))
+            }
         }
     }
 }
@@ -604,23 +686,39 @@ private fun launchSystemDocumentTreePicker(
     }
 }
 
-internal fun hasSelfReadUriGrant(ctx: Context, uri: android.net.Uri): Boolean {
+internal fun hasSelfReadUriGrant(ctx: Context, uri: android.net.Uri): Boolean =
+    hasSelfUriGrant(ctx, uri, write = false)
+
+internal fun hasSelfWriteUriGrant(ctx: Context, uri: android.net.Uri): Boolean =
+    hasSelfUriGrant(ctx, uri, write = true)
+
+private fun hasSelfUriGrant(ctx: Context, uri: android.net.Uri, write: Boolean): Boolean {
     val uriStr = uri.toString()
     val hasPersisted = runCatching {
         ctx.contentResolver.persistedUriPermissions.any { perm ->
-            perm.isReadPermission && (uri == perm.uri || uriStr.startsWith(perm.uri.toString().trimEnd('/') + "/"))
+            val modeMatch = if (write) perm.isWritePermission else perm.isReadPermission
+            modeMatch && (uri == perm.uri || uriStr.startsWith(perm.uri.toString().trimEnd('/') + "/"))
         }
     }.getOrDefault(false)
     if (hasPersisted) return true
-    if (uri.authority == com.droid.wayfinder.data.SystemDocumentsBridge.EXTERNAL_STORAGE_AUTHORITY) {
+    if (uri.authority == com.droid.wayfinder.data.SystemDocumentsBridge.EXTERNAL_STORAGE_AUTHORITY &&
+        !android.provider.DocumentsContract.isTreeUri(uri)
+    ) {
         return false
     }
+    val modeFlag = if (write) Intent.FLAG_GRANT_WRITE_URI_PERMISSION else Intent.FLAG_GRANT_READ_URI_PERMISSION
     return ctx.checkUriPermission(
         uri,
         android.os.Process.myPid(),
         android.os.Process.myUid(),
-        Intent.FLAG_GRANT_READ_URI_PERMISSION,
+        modeFlag,
     ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+}
+
+internal fun isStagedCacheFile(ctx: Context, file: File): Boolean {
+    val canonical = runCatching { file.canonicalPath }.getOrDefault(file.path)
+    val cacheRoot = runCatching { ctx.cacheDir.canonicalPath }.getOrDefault(ctx.cacheDir.path)
+    return FsPath.isWithin(cacheRoot, canonical) || FsPath.isWithin(ctx.cacheDir.path, file.path)
 }
 
 internal fun resolveReturnUri(ctx: Context, path: String, preferredUri: android.net.Uri? = null): Pair<android.net.Uri, Boolean> {
@@ -720,18 +818,86 @@ private fun openNewWindow(ctx: Context, path: String?) {
     }
 }
 
-private fun openWithSystem(ctx: Context, path: String, chooser: Boolean = false) {
-    val f = File(path)
-    // The provider only serves shared storage and our download caches (see res/xml/file_paths.xml).
-    val uri = try { FileProvider.getUriForFile(ctx, ctx.packageName + ".fileprovider", safeFileProviderTarget(path)) } catch (_: Exception) {
-        android.widget.Toast.makeText(ctx, ctx.getString(com.droid.wayfinder.R.string.toast_cannot_open_from_location, f.name), android.widget.Toast.LENGTH_SHORT).show()
-        return
+internal fun buildOpenWithSystemIntent(
+    ctx: Context,
+    path: String,
+    preferredUri: android.net.Uri? = null,
+): Intent? {
+    if (preferredUri != null || FsPath.isSaf(path) || FsPath.isDoc(path)) {
+        val docUri = preferredUri
+            ?: com.droid.wayfinder.data.SystemDocumentsBridge.toDocumentsContractUri(path, tree = false)
+            ?: return null
+        var queriedMime: String? = null
+        var providerSupportsWrite = true
+        runCatching {
+            ctx.contentResolver.query(
+                docUri,
+                arrayOf(
+                    android.provider.DocumentsContract.Document.COLUMN_MIME_TYPE,
+                    android.provider.DocumentsContract.Document.COLUMN_FLAGS,
+                ),
+                null,
+                null,
+                null,
+            )?.use { c ->
+                if (c.moveToFirst()) {
+                    val mimeIdx = c.getColumnIndex(android.provider.DocumentsContract.Document.COLUMN_MIME_TYPE)
+                    if (mimeIdx >= 0 && !c.isNull(mimeIdx)) {
+                        queriedMime = c.getString(mimeIdx)
+                            ?.takeIf { it.isNotBlank() && it != android.provider.DocumentsContract.Document.MIME_TYPE_DIR }
+                    }
+                    val flagsIdx = c.getColumnIndex(android.provider.DocumentsContract.Document.COLUMN_FLAGS)
+                    if (flagsIdx >= 0 && !c.isNull(flagsIdx)) {
+                        providerSupportsWrite =
+                            (c.getInt(flagsIdx) and android.provider.DocumentsContract.Document.FLAG_SUPPORTS_WRITE) != 0
+                    }
+                }
+            }
+        }
+        val ext = FsPath.name(path).substringAfterLast('.', "").lowercase()
+        val mime = queriedMime ?: if (ext == "apk") "application/vnd.android.package-archive" else (MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext) ?: "*/*")
+        val writable = hasSelfWriteUriGrant(ctx, docUri) && providerSupportsWrite
+        val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+            (if (writable) Intent.FLAG_GRANT_WRITE_URI_PERMISSION else 0)
+        return Intent(Intent.ACTION_VIEW)
+            .setDataAndType(docUri, mime)
+            .addFlags(flags)
+            .apply { clipData = ClipData.newRawUri("", docUri) }
     }
-    val isApk = f.extension.equals("apk", ignoreCase = true)
-    val mime = if (isApk) "application/vnd.android.package-archive"
-        else MimeTypeMap.getSingleton().getMimeTypeFromExtension(f.extension.lowercase()) ?: "*/*"
 
-    if (isApk || mime == "application/vnd.android.package-archive") {
+    // Local file: FileProvider only serves shared storage and our download caches (see res/xml/file_paths.xml).
+    val target = try {
+        safeFileProviderTarget(path)
+    } catch (_: Exception) {
+        return null
+    }
+    val uri = try {
+        FileProvider.getUriForFile(ctx, ctx.packageName + ".fileprovider", target)
+    } catch (_: Exception) {
+        return null
+    }
+    val isApk = target.extension.equals("apk", ignoreCase = true)
+    val mime = if (isApk) "application/vnd.android.package-archive" else (MimeTypeMap.getSingleton().getMimeTypeFromExtension(target.extension.lowercase()) ?: "*/*")
+    val writable = target.canWrite() && !isStagedCacheFile(ctx, target) && mime != "application/vnd.android.package-archive"
+    val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+        (if (writable) Intent.FLAG_GRANT_WRITE_URI_PERMISSION else 0)
+    return Intent(Intent.ACTION_VIEW)
+        .setDataAndType(uri, mime)
+        .addFlags(flags)
+        .apply { clipData = ClipData.newRawUri("", uri) }
+}
+
+private fun openWithSystem(
+    ctx: Context,
+    path: String,
+    chooser: Boolean = false,
+    preferredUri: android.net.Uri? = null,
+) {
+    val displayName = FsPath.name(path).ifEmpty { File(path).name }
+    val ext = displayName.substringAfterLast('.', "").lowercase()
+    val isApk = ext == "apk"
+
+    if (isApk) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             if (!ctx.packageManager.canRequestPackageInstalls()) {
                 val settingsIntent = Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
@@ -740,37 +906,69 @@ private fun openWithSystem(ctx: Context, path: String, chooser: Boolean = false)
                 }
                 try {
                     ctx.startActivity(settingsIntent)
-                    android.widget.Toast.makeText(ctx, ctx.getString(com.droid.wayfinder.R.string.toast_allow_install_unknown_apps), android.widget.Toast.LENGTH_LONG).show()
+                    android.widget.Toast.makeText(
+                        ctx,
+                        ctx.getString(com.droid.wayfinder.R.string.toast_allow_install_unknown_apps),
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
                 } catch (_: Exception) {
                 }
                 return
             }
         }
-        val installIntent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(uri, "application/vnd.android.package-archive")
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        val openWithLabel = ctx.getString(com.droid.wayfinder.R.string.chooser_open_with)
-        try {
-            ctx.startActivity(if (chooser) Intent.createChooser(installIntent, openWithLabel) else installIntent)
-            return
-        } catch (_: Exception) {
-            android.widget.Toast.makeText(ctx, ctx.getString(com.droid.wayfinder.R.string.toast_no_app_can_open, f.name), android.widget.Toast.LENGTH_SHORT).show()
-            return
-        }
     }
 
-    val i = Intent(Intent.ACTION_VIEW)
-        .setDataAndType(uri, mime)
-        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+    val i = buildOpenWithSystemIntent(ctx, path, preferredUri)
+    if (i == null) {
+        android.widget.Toast.makeText(
+            ctx,
+            ctx.getString(com.droid.wayfinder.R.string.toast_cannot_open_from_location, displayName),
+            android.widget.Toast.LENGTH_SHORT
+        ).show()
+        return
+    }
+    if (isApk) {
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    val uri = i.data ?: return
+    val selfComponent = android.content.ComponentName(ctx, MainActivity::class.java)
     val openWithLabel = ctx.getString(com.droid.wayfinder.R.string.chooser_open_with)
+    fun chooserExcludingSelf(target: Intent): Intent = Intent.createChooser(target, openWithLabel).apply {
+        if (android.os.Build.VERSION.SDK_INT >= 24) {
+            putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, arrayOf(selfComponent))
+        }
+    }
     try {
-        ctx.startActivity(if (chooser) Intent.createChooser(i, openWithLabel) else i)
+        val launchIntent = if (chooser) {
+            chooserExcludingSelf(i)
+        } else {
+            val resolved = runCatching { ctx.packageManager.queryIntentActivities(i, 0) }.getOrDefault(emptyList())
+            val matchesSelf = resolved.any { it.activityInfo?.packageName == ctx.packageName }
+            if (!matchesSelf) {
+                i
+            } else {
+                val external = resolved.mapNotNull { it.activityInfo }
+                    .filter { it.packageName != ctx.packageName && it.packageName.isNotBlank() && it.name.isNotBlank() }
+                if (external.size == 1) {
+                    Intent(i).setClassName(external[0].packageName, external[0].name)
+                } else {
+                    chooserExcludingSelf(i)
+                }
+            }
+        }
+        ctx.startActivity(launchIntent)
     } catch (_: ActivityNotFoundException) {
         try {
-            ctx.startActivity(Intent.createChooser(i.setDataAndType(uri, "*/*"), openWithLabel))
+            val fallback = Intent(i).setDataAndType(uri, "*/*").apply {
+                clipData = ClipData.newRawUri("", uri)
+            }
+            ctx.startActivity(chooserExcludingSelf(fallback))
         } catch (_: Exception) {
-            android.widget.Toast.makeText(ctx, ctx.getString(com.droid.wayfinder.R.string.toast_no_app_can_open, f.name), android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(
+                ctx,
+                ctx.getString(com.droid.wayfinder.R.string.toast_no_app_can_open, displayName),
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
         }
     }
 }

@@ -144,8 +144,10 @@ fun ContentCard(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
             } else {
                 Box(Modifier.weight(1f).fillMaxWidth()) { FolderView(vm, s, s.active, active = true) }
             }
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            StatusBar(vm, s)
+            if (s.statusBarVisible || s.ops.isNotEmpty()) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                StatusBar(vm, s)
+            }
         }
     }
 }
@@ -341,7 +343,14 @@ private fun ErrorView(vm: BrowserViewModel, tab: TabState) {
             val email = tab.path.removePrefix("gdrive://").substringBefore('/')
             Button({ vm.requestMountSaf(email) }) { Text("Mount via File Picker (SAF)") }
         }
-        if (e.authHost != null) Button({ vm.showDialog(Dialog.SmbAuth(e.authHost)) }) { Text("Sign in") }
+        if (e.authHost != null) {
+            if (FsPath.isOneDrive(e.authHost)) {
+                val accId = e.authHost.removePrefix("onedrive://").substringBefore('/').takeIf { it.isNotBlank() }
+                Button({ vm.showConnectOneDriveDialog(accId) }) { Text("Sign in") }
+            } else {
+                Button({ vm.showDialog(Dialog.SmbAuth(e.authHost)) }) { Text("Sign in") }
+            }
+        }
         OutlinedButton({ vm.refresh() }) { Text("Retry") }
         if (tab.canGoBack) OutlinedButton({ vm.back() }) { Text("Go back") }
     }

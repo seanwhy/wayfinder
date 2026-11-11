@@ -79,19 +79,23 @@ private data class TreeRowData(
     val path: String, val label: String, val icon: ImageVector, val tint: Color?, val depth: Int,
     val expanded: Boolean, val loading: Boolean, val expandable: Boolean,
     val subtitle: String? = null,
+    val isBeta: Boolean = false,
     val driveAccount: com.droid.wayfinder.data.DriveAccount? = null,
+    val oneDriveAccount: com.droid.wayfinder.data.OneDriveAccount? = null,
     val pairedPhone: com.droid.wayfinder.data.PairedPhone? = null,
 )
 
 private fun flatten(
     path: String, label: String, icon: ImageVector, tint: Color?, depth: Int, s: AppState, out: MutableList<TreeRowData>,
     subtitle: String? = null,
+    isBeta: Boolean = false,
     driveAccount: com.droid.wayfinder.data.DriveAccount? = null,
+    oneDriveAccount: com.droid.wayfinder.data.OneDriveAccount? = null,
     pairedPhone: com.droid.wayfinder.data.PairedPhone? = null,
 ) {
     val expanded = path in s.tree.expanded
     val kids = s.tree.children[path]
-    out += TreeRowData(path, label, icon, tint, depth, expanded, path in s.tree.loading, kids == null || kids.isNotEmpty(), subtitle, driveAccount, pairedPhone)
+    out += TreeRowData(path, label, icon, tint, depth, expanded, path in s.tree.loading, kids == null || kids.isNotEmpty(), subtitle, isBeta, driveAccount, oneDriveAccount, pairedPhone)
     if (expanded && kids != null) {
         kids.filter { s.showHidden || !it.isHidden }.forEach {
             flatten(it.path, it.name, if (it.isShare) Icons.Outlined.FolderShared else Icons.Outlined.Folder, null, depth + 1, s, out)
@@ -106,8 +110,13 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
     val activePath = s.active.path
     // Inside an archive the tree highlights the folder that holds the .zip.
     val treePath = FsPath.zipSplit(activePath)?.first?.let { FsPath.parent(it) } ?: activePath
-    val locations = remember(s.roots, s.tree, s.showHidden) {
-        buildList { s.roots.forEach { flatten(it.path, it.label, rootIcon(it.removable), null, 0, s, this, it.subtitle) } }
+    val locations = remember(s.roots, s.linuxRootPath, s.tree, s.showHidden) {
+        buildList {
+            s.roots.forEach {
+                val isBeta = com.droid.wayfinder.data.GooglebookEcosystem.isLinuxLocation(it.path, it.label, s.linuxRootPath)
+                flatten(it.path, it.label, rootIcon(it.removable), null, 0, s, this, it.subtitle, isBeta = isBeta)
+            }
+        }
     }
     val driveRows = remember(s.driveAccounts, s.tree, s.showHidden) {
         buildList {
@@ -118,6 +127,23 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
                 } else {
                     add(TreeRowData(rootPath, acc.title, Icons.Outlined.Cloud, null, 0, false, false, false, acc.email, driveAccount = acc))
                 }
+            }
+        }
+    }
+    val oneDriveRows = remember(s.oneDriveAccounts, s.tree, s.showHidden) {
+        buildList {
+            s.oneDriveAccounts.forEach { acc ->
+                flatten(
+                    acc.rootPath,
+                    acc.sidebarTitle,
+                    Icons.Outlined.Cloud,
+                    null,
+                    0,
+                    s,
+                    this,
+                    acc.sidebarSubtitle,
+                    oneDriveAccount = acc,
+                )
             }
         }
     }
@@ -140,9 +166,9 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
             }
             if (phone != null) {
                 if (phone.isMounted && phone.path != FsPath.PHONE_ROOT) {
-                    flatten(phone.path, phone.name, Icons.Outlined.Smartphone, null, 0, s, this, phone.subtitle, pairedPhone = phone)
+                    flatten(phone.path, phone.name, Icons.Outlined.Smartphone, null, 0, s, this, phone.subtitle, isBeta = true, pairedPhone = phone)
                 } else {
-                    add(TreeRowData(FsPath.PHONE_ROOT, phone.name, Icons.Outlined.Smartphone, null, 0, false, false, false, phone.subtitle, pairedPhone = phone))
+                    add(TreeRowData(FsPath.PHONE_ROOT, phone.name, Icons.Outlined.Smartphone, null, 0, false, false, false, phone.subtitle, isBeta = true, pairedPhone = phone))
                 }
             }
         }
@@ -152,10 +178,11 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
             setOfNotNull(s.pairedPhone?.path?.takeIf { it != FsPath.PHONE_ROOT })
     }
     // Saved servers and cloud / SAF mounts first (with eject buttons), filtering out those mapped to Drive accounts or Phone
-    val mountRows = remember(s.mounts, s.tree, s.showHidden, specialMountPaths) {
+    val mountRows = remember(s.mounts, s.linuxRootPath, s.tree, s.showHidden, specialMountPaths) {
         buildList {
             s.mounts.filter { it.path !in specialMountPaths }.forEach { m ->
-                flatten(m.path, m.label, if (m.saf) Icons.Outlined.Cloud else Icons.Outlined.Dns, null, 0, s, this)
+                val isBeta = com.droid.wayfinder.data.GooglebookEcosystem.isLinuxLocation(m.path, m.label, s.linuxRootPath)
+                flatten(m.path, m.label, if (m.saf) Icons.Outlined.Cloud else Icons.Outlined.Dns, null, 0, s, this, isBeta = isBeta)
             }
         }
     }
@@ -240,6 +267,7 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
                     selected = false,
                     dropPath = null,
                     subtitle = stringResource(R.string.sidebar_linux_mount_subtitle),
+                    badge = stringResource(R.string.badge_beta),
                     onClick = { vm.requestMountLinuxFiles() },
                 )
             }
@@ -294,6 +322,33 @@ fun Sidebar(vm: BrowserViewModel, s: AppState, modifier: Modifier) {
                 TreeItem(vm, s, r, activePath, menu, mount = mount)
             }
         }
+
+        // Microsoft OneDrive (Personal + Microsoft 365) via Graph v1.0
+        item { Divider() }
+        item {
+            val addOneDriveDesc = stringResource(R.string.onedrive_add_account)
+            SectionTitle(stringResource(R.string.onedrive_section), trailing = {
+                HeaderAction(Icons.Outlined.Add, addOneDriveDesc) { vm.showConnectOneDriveDialog() }
+            })
+        }
+        if (oneDriveRows.isEmpty()) {
+            item(key = "onedrive_empty") {
+                SidebarItem(
+                    label = stringResource(R.string.onedrive_sign_in_prompt),
+                    icon = Icons.Outlined.Cloud,
+                    depth = 0,
+                    selected = false,
+                    dropPath = null,
+                    subtitle = stringResource(R.string.onedrive_sign_in_subtitle),
+                    iconComposable = { OneDriveIcon(Modifier.size(20.dp)) },
+                    onClick = { vm.showConnectOneDriveDialog() },
+                )
+            }
+        } else {
+            items(oneDriveRows, key = { "onedrive${it.depth}${it.path}" }) { r ->
+                TreeItem(vm, s, r, activePath, menu)
+            }
+        }
         item { Divider() }
         item {
             SectionTitle(stringResource(R.string.network_and_cloud_section), trailing = {
@@ -346,6 +401,7 @@ private fun HeaderAction(icon: ImageVector, desc: String, onClick: () -> Unit) {
 @Composable
 private fun TreeItem(vm: BrowserViewModel, s: AppState, r: TreeRowData, activePath: String, menu: MenuController, mount: Mount? = null) {
     val driveAcc = r.driveAccount
+    val oneDriveAcc = r.oneDriveAccount
     val phone = r.pairedPhone
     val displayLabel = when {
         r.depth > 0 -> r.label
@@ -358,6 +414,8 @@ private fun TreeItem(vm: BrowserViewModel, s: AppState, r: TreeRowData, activePa
         driveAcc != null && !r.expanded ->
             (driveAcc.mountPath != null && (driveAcc.mountPath == activePath || FsPath.isWithin(driveAcc.mountPath, activePath))) ||
                 activePath.startsWith("gdrive://${driveAcc.email}")
+        oneDriveAcc != null && !r.expanded ->
+            activePath == oneDriveAcc.rootPath || FsPath.isWithin(oneDriveAcc.rootPath, activePath)
         phone != null && !r.expanded ->
             activePath == phone.path || FsPath.isWithin(phone.path, activePath) || activePath == FsPath.PHONE_ROOT
         else -> r.path == activePath
@@ -366,11 +424,19 @@ private fun TreeItem(vm: BrowserViewModel, s: AppState, r: TreeRowData, activePa
         label = displayLabel, icon = r.icon, depth = r.depth, selected = selected,
         dropPath = r.path.takeIf { !FsPath.isVirtual(it) && (!FsPath.isSmb(it) || FsPath.parseSmb(it).share != null) },
         subtitle = displaySubtitle,
-        iconComposable = if (driveAcc != null) ({ GoogleDriveIcon(Modifier.size(20.dp)) }) else null,
+        badge = if (r.isBeta) stringResource(R.string.badge_beta) else null,
+        iconComposable = when {
+            driveAcc != null -> ({ GoogleDriveIcon(Modifier.size(20.dp)) })
+            oneDriveAcc != null -> ({ OneDriveIcon(Modifier.size(20.dp)) })
+            else -> null
+        },
         expandable = r.expandable, expanded = r.expanded, loading = r.loading, onToggle = { vm.toggleTree(r.path) },
         trailing = when {
             driveAcc != null && driveAcc.isMounted && mount != null -> ({
                 HeaderAction(Icons.Outlined.Eject, stringResource(R.string.sidebar_unmount_target, driveAcc.email)) { vm.eject(mount) }
+            })
+            oneDriveAcc != null -> ({
+                HeaderAction(Icons.Outlined.Eject, "Sign out ${oneDriveAcc.email}") { vm.signOutOneDrive(oneDriveAcc.accountId) }
             })
             phone != null && phone.isMounted && mount != null -> ({
                 HeaderAction(Icons.Outlined.Eject, stringResource(R.string.sidebar_unmount_target, localizePhoneName(phone.name))) { vm.eject(mount) }
@@ -387,6 +453,7 @@ private fun TreeItem(vm: BrowserViewModel, s: AppState, r: TreeRowData, activePa
         onClick = {
             when {
                 driveAcc != null -> vm.openDriveAccount(driveAcc)
+                oneDriveAcc != null -> vm.navigate(oneDriveAcc.rootPath)
                 phone != null -> vm.openPairedPhone(phone)
                 else -> vm.navigate(r.path)
             }
@@ -394,6 +461,7 @@ private fun TreeItem(vm: BrowserViewModel, s: AppState, r: TreeRowData, activePa
         onMiddle = {
             when {
                 driveAcc != null -> driveAcc.mountPath?.let { vm.newTab(it, activate = false) }
+                oneDriveAcc != null -> vm.newTab(oneDriveAcc.rootPath, activate = false)
                 phone != null -> vm.newTab(phone.path, activate = false)
                 else -> vm.newTab(r.path, activate = false)
             }
@@ -401,6 +469,7 @@ private fun TreeItem(vm: BrowserViewModel, s: AppState, r: TreeRowData, activePa
         onSecondary = {
             when {
                 driveAcc != null -> menu.show(it, driveAccountMenu(vm, driveAcc, mount))
+                oneDriveAcc != null -> menu.show(it, oneDriveAccountMenu(vm, oneDriveAcc))
                 phone != null -> menu.show(it, phoneMenu(vm, phone, mount))
                 else -> {
                     val base = sidebarMenu(vm, s, r.path, r.path in s.pins)
@@ -431,6 +500,7 @@ private fun SidebarItem(
     dropPath: String?,
     tint: Color? = null,
     subtitle: String? = null,
+    badge: String? = null,
     iconComposable: (@Composable () -> Unit)? = null,
     expandable: Boolean = false,
     expanded: Boolean = false,
@@ -499,10 +569,19 @@ private fun SidebarItem(
             Icon(icon, null, Modifier.padding(horizontal = 6.dp).size(20.dp), tint = tint ?: if (selected) cs.onSecondaryContainer else cs.onSurfaceVariant)
         }
         Column(Modifier.weight(1f).padding(start = 4.dp), verticalArrangement = Arrangement.Center) {
-            Text(
-                label, style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1, overflow = TextOverflow.Ellipsis, color = if (selected) cs.onSecondaryContainer else cs.onSurface,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    label,
+                    Modifier.weight(1f, fill = false),
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = if (selected) cs.onSecondaryContainer else cs.onSurface,
+                )
+                if (badge != null) {
+                    SidebarBetaBadge(badge, selected = selected)
+                }
+            }
             if (subtitle != null) {
                 Text(
                     subtitle, style = MaterialTheme.typography.bodySmall,
@@ -511,6 +590,26 @@ private fun SidebarItem(
             }
         }
         trailing?.invoke()
+    }
+}
+
+@Composable
+private fun SidebarBetaBadge(text: String, selected: Boolean) {
+    val cs = MaterialTheme.colorScheme
+    val containerColor = if (selected) cs.tertiaryContainer else cs.tertiaryContainer.copy(alpha = 0.85f)
+    Box(
+        Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(containerColor)
+            .padding(horizontal = 6.dp, vertical = 1.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            color = cs.onTertiaryContainer,
+        )
     }
 }
 

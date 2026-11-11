@@ -11,6 +11,8 @@ import com.droid.wayfinder.data.Conflict
 import com.droid.wayfinder.data.FileEntry
 import com.droid.wayfinder.data.FsSpace
 import com.droid.wayfinder.data.Marks
+import com.droid.wayfinder.data.OneDriveAccount
+import com.droid.wayfinder.data.OneDriveDeviceCodeSession
 import com.droid.wayfinder.data.PosixInfo
 import com.droid.wayfinder.data.Progress
 import com.droid.wayfinder.data.ThemeMode
@@ -55,6 +57,8 @@ sealed interface Dialog {
     data class Compress(val sources: List<String>, val suggested: String) : Dialog
     /** "Connect to Server" (Ctrl+Shift+K); [initial] pre-fills the form (e.g. when reconnecting a saved server). */
     data class Connect(val initial: ConnectConfig? = null) : Dialog
+    /** "Connect Microsoft OneDrive"; [reauthAccountId] pre-selects an existing account when re-signing in. */
+    data class ConnectOneDrive(val reauthAccountId: String? = null) : Dialog
     data class SmbAuth(val host: String, val user: String = "", val domain: String = "") : Dialog
     data object Shortcuts : Dialog
     /** Pre-flight guidance dialog shown before launching the system document tree picker. */
@@ -68,8 +72,11 @@ sealed interface Dialog {
 }
 
 sealed interface UiEvent {
-    /** [chooser] = always show the "Open with" app chooser. */
-    data class OpenFile(val path: String, val chooser: Boolean = false) : UiEvent
+    /**
+     * [chooser] = always show the "Open with" app chooser.
+     * [uri] = optional pre-resolved [android.provider.DocumentsContract] URI when opening a granted `saf://` or `doc://` document in place.
+     */
+    data class OpenFile(val path: String, val chooser: Boolean = false, val uri: android.net.Uri? = null) : UiEvent
     data class Share(val paths: List<String>) : UiEvent
     data class Toast(val message: String, val undo: Boolean = false) : UiEvent
     /** [what] names the copied value in the confirmation ("Path copied", "SHA-256 copied"). */
@@ -77,6 +84,8 @@ sealed interface UiEvent {
     data object Finish : UiEvent
     /** Open an independent window, optionally at [path]. */
     data class NewWindow(val path: String?) : UiEvent
+    /** Open an HTTPS URL in the system browser (e.g. Microsoft OAuth sign-in or OneDrive Web). */
+    data class OpenExternalUrl(val url: String) : UiEvent
     /** Launch ACTION_OPEN_DOCUMENT_TREE to mount a cloud / SAF location. */
     data class PickDocumentTree(val initialUri: android.net.Uri? = null, val accountEmail: String? = null) : UiEvent
     /** Launch the system Google Account picker to grant account visibility to Wayfinder. */
@@ -141,6 +150,12 @@ data class AppState(
     /** Optional Details-view columns. */
     val tagsColumn: Boolean = false,
     val permsColumn: Boolean = false,
+    /** Whether Wayfinder's bottom item-count bar is visible inside the file pane. */
+    val statusBarVisible: Boolean = true,
+    /** True when the Android system status bar is hidden by user preference. */
+    val hideStatusBar: Boolean = false,
+    /** Transient modal navigation drawer open state on compact (< 600.dp) viewports. */
+    val compactSidebarOpen: Boolean = false,
     /** Incremented to ask the sidebar to scroll to the active folder (Alt+Shift+L). */
     val treeLocate: Int = 0,
     /** True in windows opened with Ctrl+N (they don't persist the tab session). */
@@ -161,6 +176,16 @@ data class AppState(
     val quickAccessAvailable: Boolean = false,
     /** Discovered Google Drive accounts on the device. */
     val driveAccounts: List<com.droid.wayfinder.data.DriveAccount> = emptyList(),
+    /** Connected Microsoft OneDrive Personal / Microsoft 365 accounts. */
+    val oneDriveAccounts: List<OneDriveAccount> = emptyList(),
+    /** Saved default Entra Application (Client) ID for Microsoft OneDrive OAuth 2.0. */
+    val oneDriveDefaultClientId: String = "",
+    /** True while an interactive OneDrive Browser PKCE or Device Code sign-in flow is awaiting completion. */
+    val oneDriveSigningIn: Boolean = false,
+    /** Non-null inline error message for the active ConnectOneDrive dialog. */
+    val oneDriveAuthError: String? = null,
+    /** Active OAuth 2.0 Device Code session being polled in the ConnectOneDrive dialog, if any. */
+    val oneDriveDeviceSession: OneDriveDeviceCodeSession? = null,
     /** Paired smartphone (e.g. Pixel 9) details. */
     val pairedPhone: com.droid.wayfinder.data.PairedPhone? = null,
     /** Discovered Linux development environment root path (`doc://...`, `saf://...`, or local `LinuxFiles`), if available. */
@@ -181,6 +206,7 @@ data class AppState(
         get() = roots.associate { com.droid.wayfinder.data.FsPath.normalize(it.path) to it.label } +
             mounts.associate { com.droid.wayfinder.data.FsPath.normalize(it.path) to it.label } +
             driveAccounts.mapNotNull { acc -> acc.mountPath?.let { com.droid.wayfinder.data.FsPath.normalize(it) to "Drive (${acc.email})" } }.toMap() +
+            oneDriveAccounts.associate { com.droid.wayfinder.data.FsPath.normalize(it.rootPath) to it.sidebarTitle } +
             pairedPhone?.takeIf { it.isMounted && it.path != com.droid.wayfinder.data.FsPath.PHONE_ROOT }
                 ?.let {
                     mapOf(

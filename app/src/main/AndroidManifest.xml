@@ -4,6 +4,7 @@
 
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <uses-feature android:name="android.hardware.wifi" android:required="false" />
+    <uses-feature android:name="android.hardware.bluetooth" android:required="false" />
 
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -32,6 +33,10 @@
         </intent>
         <intent>
             <action android:name="android.intent.action.OPEN_DOCUMENT_TREE" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="content" android:mimeType="application/vnd.android.package-archive" />
         </intent>
     </queries>
 
@@ -109,6 +114,15 @@
                 <data android:mimeType="vnd.android.document/directory" />
                 <data android:mimeType="inode/directory" />
             </intent-filter>
+            <!-- APK files (.apk) open their enclosing folder in Wayfinder with the APK selected. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:mimeType="application/vnd.android.package-archive" />
+            </intent-filter>
             <!-- Archive browsing (.zip, .tar.gz, .tgz, .tar) opened directly in Wayfinder. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -126,7 +140,7 @@
         </activity>
 
         <provider
-            android:name="androidx.core.content.FileProvider"
+            android:name=".WayfinderFileProvider"
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
